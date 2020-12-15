@@ -34,14 +34,14 @@ fn write_color(color: &Color, samples_per_pixel: i32) {
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(r: &Ray, hittable: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: Ray, hittable: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Color::zero();
     }
     match hittable.hit(r, 0.001, INFINITY) {
         Some(hit_record) => match hit_record.material().scatter(r, &hit_record) {
             Some((attenuation, scattered)) => {
-                attenuation * ray_color(&scattered, hittable, depth - 1)
+                attenuation * ray_color(scattered, hittable, depth - 1)
             }
             None => Color::zero(),
         },
@@ -62,9 +62,9 @@ fn main() {
     let max_depth = 50;
 
     let mat_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let mat_center = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let mat_left = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
-    let mat_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.8)));
+    let mat_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let mat_left = Rc::new(Dielectric::new(1.5));
+    let mat_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.8), 1.0));
 
     // World
     let world: Vec<Box<dyn Hittable>> = vec![
@@ -74,7 +74,12 @@ fn main() {
             mat_ground,
         )),
         Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, mat_center)),
-        Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), 0.5, mat_left)),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            0.5,
+            mat_left.clone(),
+        )),
+        Box::new(Sphere::new(Point3::new(-1.0, 0.0, -1.0), -0.4, mat_left)),
         Box::new(Sphere::new(Point3::new(1.0, 0.0, -1.0), 0.5, mat_right)),
     ];
 
@@ -92,7 +97,7 @@ fn main() {
                 let v = (j as f64 + rand()) / (image_height - 1) as f64;
 
                 let r = camera.get_ray(u, v);
-                color = color + ray_color(&r, &world, max_depth);
+                color = color + ray_color(r, &world, max_depth);
             }
 
             write_color(&color, samples_per_pixel);

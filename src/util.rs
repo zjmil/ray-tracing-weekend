@@ -19,3 +19,15 @@ pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
         x
     }
 }
+
+pub fn min(a: f64, b: f64) -> f64 {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+pub fn square(x: f64) -> f64 {
+    x * x
+}

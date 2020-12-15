@@ -32,7 +32,7 @@ impl HitRecord {
         outward_normal: Vec3,
         material: Rc<dyn Material>,
     ) -> HitRecord {
-        let front_face = dot(&ray.direction(), &outward_normal) < 0.0;
+        let front_face = dot(ray.direction(), outward_normal) < 0.0;
         let normal = if front_face {
             outward_normal
         } else {
@@ -55,17 +55,21 @@ impl HitRecord {
         self.p
     }
 
+    pub fn front_face(&self) -> bool {
+        self.front_face
+    }
+
     pub fn material(&self) -> Rc<dyn Material> {
         self.material.clone()
     }
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
 impl Hittable for Vec<Box<dyn Hittable>> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut rec: Option<HitRecord> = None;
 

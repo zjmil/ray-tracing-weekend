@@ -3,6 +3,7 @@ use crate::vec3::Vec3;
 
 type Point3 = Vec3;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Camera {
     origin: Point3,
     lower_left: Point3,
