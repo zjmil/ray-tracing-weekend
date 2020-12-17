@@ -4,9 +4,9 @@ use crate::util::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl ops::Add<Vec3> for Vec3 {
@@ -14,6 +14,14 @@ impl ops::Add<Vec3> for Vec3 {
 
     fn add(self, other: Vec3) -> Vec3 {
         Vec3::new(self.x + other.x, self.y + other.y, self.z + other.z)
+    }
+}
+
+impl ops::Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Vec3 {
+        Vec3::new(-self.x, -self.y, -self.z)
     }
 }
 
@@ -57,7 +65,7 @@ impl ops::Div<f64> for Vec3 {
     }
 }
 
-pub fn dot(v: Vec3, u: Vec3) -> f64 {
+pub fn dot(v: &Vec3, u: &Vec3) -> f64 {
     v.x * u.x + v.y * u.y + v.z * u.z
 }
 
@@ -91,23 +99,11 @@ impl Vec3 {
     }
 
     pub fn mag_squared(&self) -> f64 {
-        dot(*self, *self)
+        dot(self, self)
     }
 
     pub fn normalized(&self) -> Vec3 {
         *self / self.mag()
-    }
-
-    pub fn x(&self) -> f64 {
-        self.x
-    }
-
-    pub fn y(&self) -> f64 {
-        self.y
-    }
-
-    pub fn z(&self) -> f64 {
-        self.z
     }
 
     pub fn abs(&self) -> Vec3 {
@@ -131,7 +127,7 @@ mod tests {
     }
 
     fn vapprox_eq(v: Vec3, w: Vec3) -> bool {
-        fapprox_eq(v.x(), w.x()) && fapprox_eq(v.y(), w.y()) && fapprox_eq(v.z(), w.z())
+        fapprox_eq(v.x, w.x) && fapprox_eq(v.y, w.y) && fapprox_eq(v.z, w.z)
     }
 
     #[test]
@@ -164,7 +160,7 @@ mod tests {
     #[test]
     fn test_dot() {
         assert!(fapprox_eq(
-            dot(Vec3::new(1.0, 3.0, -5.0), Vec3::new(4.0, -2.0, -1.0)),
+            dot(&Vec3::new(1.0, 3.0, -5.0), &Vec3::new(4.0, -2.0, -1.0)),
             3.0
         ))
     }
@@ -193,23 +189,40 @@ pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().normalized()
 }
 
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
     let in_unit_sphere = random_in_unit_sphere();
-    if dot(in_unit_sphere, normal) > 0.0 {
-        // same hemispere as normal
+    if dot(&in_unit_sphere, normal) > 0.0 {
+        // same hemisphere as normal
         in_unit_sphere
     } else {
-        -1.0 * in_unit_sphere
+        -in_unit_sphere
     }
 }
 
-pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - 2.0 * dot(v, n) * n
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * dot(v, n) * *n
 }
 
-pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = min(dot(-1.0 * uv, n), 1.0);
-    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * n;
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = min(dot(&-*uv, n), 1.0);
+    let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
+    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * *n;
     r_out_perp + r_out_parallel
+}
+
+pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
+    Vec3::new(
+        u.y * v.z - u.z * v.y,
+        u.z * v.x - u.x * v.z,
+        u.x * v.y - u.y * v.x,
+    )
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::new(rand_range(-1.0, 1.0), rand_range(-1.0, 1.0), 0.0);
+        if p.mag_squared() < 1.0 {
+            return p;
+        }
+    }
 }

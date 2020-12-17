@@ -6,7 +6,7 @@ use crate::vec3::*;
 type Color = Vec3;
 
 pub trait Material {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
 }
 
 pub struct Lambertian {
@@ -20,13 +20,13 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction = rec.normal() + random_unit_vector();
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
-            scatter_direction = rec.normal();
+            scatter_direction = rec.normal;
         }
 
-        let scattered = Ray::new(rec.p(), scatter_direction);
+        let scattered = Ray::new(rec.p, scatter_direction);
         Some((self.albedo, scattered))
     }
 }
@@ -46,11 +46,11 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected = reflect(r_in.direction().normalized(), rec.normal());
-        let scattered = Ray::new(rec.p(), reflected + self.fuzz * random_in_unit_sphere());
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        let reflected = reflect(&r_in.direction.normalized(), &rec.normal);
+        let scattered = Ray::new(rec.p, reflected + self.fuzz * random_in_unit_sphere());
 
-        if dot(scattered.direction(), rec.normal()) > 0.0 {
+        if dot(&scattered.direction, &rec.normal) > 0.0 {
             Some((self.albedo, scattered))
         } else {
             None
@@ -77,27 +77,27 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let refraction_ratio = if rec.front_face() {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+        let refraction_ratio = if rec.front_face {
             1.0 / self.index_of_refraction
         } else {
             self.index_of_refraction
         };
 
-        let unit_direction = r_in.direction().normalized();
+        let unit_direction = r_in.direction.normalized();
 
-        let cos_theta = min(dot(-1.0 * unit_direction, rec.normal()), 1.0);
-        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cos_theta = min(dot(&-unit_direction, &rec.normal), 1.0);
+        let sin_theta = (1.0 - square(cos_theta)).sqrt();
 
         let direction = if refraction_ratio * sin_theta > 1.0
             || Dielectric::reflectance(cos_theta, refraction_ratio) > rand()
         {
-            reflect(unit_direction, rec.normal())
+            reflect(&unit_direction, &rec.normal)
         } else {
-            refract(unit_direction, rec.normal(), refraction_ratio)
+            refract(&unit_direction, &rec.normal, refraction_ratio)
         };
 
-        let scattered = Ray::new(rec.p(), direction);
+        let scattered = Ray::new(rec.p, direction);
         Some((Color::one(), scattered))
     }
 }
