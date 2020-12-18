@@ -1,5 +1,10 @@
 use rand::prelude::*;
 
+use crate::vec3::Vec3;
+
+pub type Point3 = Vec3;
+pub type Color = Vec3;
+
 pub fn rand() -> f64 {
     thread_rng().gen()
 }

@@ -3,8 +3,6 @@ use crate::ray::Ray;
 use crate::util::*;
 use crate::vec3::*;
 
-type Color = Vec3;
-
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
 }
@@ -20,7 +18,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
@@ -40,7 +38,7 @@ impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Metal {
         Metal {
             albedo,
-            fuzz: if fuzz < 1.0 { fuzz } else { 1.0 },
+            fuzz: clamp(fuzz, fuzz, 1.0),
         }
     }
 }

@@ -1,12 +1,10 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::util::square;
-use crate::vec3::{dot, Vec3};
+use crate::util::{square, Point3};
+use crate::vec3::dot;
 
 use std::sync::Arc;
-
-type Point3 = Vec3;
 
 pub struct Sphere {
     center: Point3,
@@ -48,7 +46,7 @@ impl Hittable for Sphere {
 
         let at = r.at(root);
         let outward_normal = (at - self.center) / self.radius;
-        Some(HitRecord::new_normal(
+        Some(HitRecord::new(
             at,
             root,
             r,

@@ -116,6 +116,47 @@ impl Vec3 {
     }
 }
 
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let v = Vec3::random_range(-1.0, 1.0);
+        if v.mag_squared() < 1.0 {
+            return v;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().normalized()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * dot(v, n) * *n
+}
+
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = min(dot(&-*uv, n), 1.0);
+    let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
+    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * *n;
+    r_out_perp + r_out_parallel
+}
+
+pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
+    Vec3::new(
+        u.y * v.z - u.z * v.y,
+        u.z * v.x - u.x * v.z,
+        u.x * v.y - u.y * v.x,
+    )
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::new(rand_range(-1.0, 1.0), rand_range(-1.0, 1.0), 0.0);
+        if p.mag_squared() < 1.0 {
+            return p;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,56 +214,5 @@ mod tests {
         let v = Vec3::new(3.0, 4.0, 5.0);
         let mag = v.mag();
         assert!(fapprox_eq(mag * mag, 50.0))
-    }
-}
-
-pub fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let v = Vec3::random_range(-1.0, 1.0);
-        if v.mag_squared() < 1.0 {
-            return v;
-        }
-    }
-}
-
-pub fn random_unit_vector() -> Vec3 {
-    random_in_unit_sphere().normalized()
-}
-
-pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if dot(&in_unit_sphere, normal) > 0.0 {
-        // same hemisphere as normal
-        in_unit_sphere
-    } else {
-        -in_unit_sphere
-    }
-}
-
-pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    *v - 2.0 * dot(v, n) * *n
-}
-
-pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = min(dot(&-*uv, n), 1.0);
-    let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
-    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * *n;
-    r_out_perp + r_out_parallel
-}
-
-pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
-    Vec3::new(
-        u.y * v.z - u.z * v.y,
-        u.z * v.x - u.x * v.z,
-        u.x * v.y - u.y * v.x,
-    )
-}
-
-pub fn random_in_unit_disk() -> Vec3 {
-    loop {
-        let p = Vec3::new(rand_range(-1.0, 1.0), rand_range(-1.0, 1.0), 0.0);
-        if p.mag_squared() < 1.0 {
-            return p;
-        }
     }
 }

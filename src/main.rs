@@ -19,9 +19,6 @@ use vec3::*;
 
 use std::f64::INFINITY;
 
-type Color = Vec3;
-type Point3 = Vec3;
-
 fn write_color(color: &Color, samples_per_pixel: i32) {
     // Divide the color by the number of samples and gamma-correct for gamma=2.0
     let scale = 1.0 / (samples_per_pixel as f64);
@@ -71,7 +68,6 @@ fn main() {
     let look_at = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let aperture = 0.1;
-    // let dist_to_focus = (look_from - look_at).mag();
     let dist_to_focus = 10.0;
     let camera = Camera::new(
         look_from,
@@ -82,8 +78,6 @@ fn main() {
         aperture,
         dist_to_focus,
     );
-
-    println!("P3\n{} {}\n255", image_width, image_height);
 
     let mut colors: Vec<(usize, Color)> = (0..image_height)
         .rev()
@@ -105,27 +99,10 @@ fn main() {
 
     colors.sort_by_key(|(n, _)| *n);
 
+    println!("P3\n{} {}\n255", image_width, image_height);
     for (_, color) in colors.iter() {
         write_color(&color, samples_per_pixel);
     }
-
-    /*
-    for j in (0..image_height).rev() {
-        eprint!("\rScanlines remaining: {}", j);
-        for i in 0..image_width {
-            let mut color = Color::zero();
-            for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rand()) / (image_width - 1) as f64;
-                let v = (j as f64 + rand()) / (image_height - 1) as f64;
-
-                let r = camera.get_ray(u, v);
-                color = color + ray_color(r, &world, max_depth);
-            }
-
-            write_color(&color, samples_per_pixel);
-        }
-    }
-    */
 
     eprintln!("\nDone.");
 }

@@ -1,7 +1,6 @@
 use crate::ray::Ray;
+use crate::util::Point3;
 use crate::vec3::*;
-
-type Point3 = Vec3;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
