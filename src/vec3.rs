@@ -12,6 +12,7 @@ pub struct Vec3 {
 impl ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn add(self, other: Vec3) -> Vec3 {
         Vec3::new(self.x + other.x, self.y + other.y, self.z + other.z)
     }
@@ -20,6 +21,7 @@ impl ops::Add<Vec3> for Vec3 {
 impl ops::Neg for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn neg(self) -> Vec3 {
         Vec3::new(-self.x, -self.y, -self.z)
     }
@@ -28,6 +30,7 @@ impl ops::Neg for Vec3 {
 impl ops::Sub<Vec3> for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn sub(self, other: Vec3) -> Vec3 {
         Vec3::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
@@ -36,6 +39,7 @@ impl ops::Sub<Vec3> for Vec3 {
 impl ops::Mul<f64> for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn mul(self, t: f64) -> Vec3 {
         Vec3::new(t * self.x, t * self.y, t * self.z)
     }
@@ -44,6 +48,7 @@ impl ops::Mul<f64> for Vec3 {
 impl ops::Mul<Vec3> for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn mul(self, other: Vec3) -> Vec3 {
         Vec3::new(self.x * other.x, self.y * other.y, self.z * other.z)
     }
@@ -52,6 +57,7 @@ impl ops::Mul<Vec3> for Vec3 {
 impl ops::Mul<Vec3> for f64 {
     type Output = Vec3;
 
+    #[inline]
     fn mul(self, v: Vec3) -> Vec3 {
         v * self
     }
@@ -60,32 +66,39 @@ impl ops::Mul<Vec3> for f64 {
 impl ops::Div<f64> for Vec3 {
     type Output = Vec3;
 
+    #[inline]
     fn div(self, t: f64) -> Vec3 {
         Vec3::new(self.x / t, self.y / t, self.z / t)
     }
 }
 
+#[inline]
 pub fn dot(v: &Vec3, u: &Vec3) -> f64 {
     v.x * u.x + v.y * u.y + v.z * u.z
 }
 
 impl Vec3 {
+    #[inline]
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
     }
 
+    #[inline]
     pub fn zero() -> Vec3 {
         Vec3::new(0.0, 0.0, 0.0)
     }
 
+    #[inline]
     pub fn one() -> Vec3 {
         Vec3::new(1.0, 1.0, 1.0)
     }
 
+    #[inline]
     pub fn random() -> Vec3 {
         Vec3::new(rand(), rand(), rand())
     }
 
+    #[inline]
     pub fn random_range(min: f64, max: f64) -> Vec3 {
         Vec3::new(
             rand_range(min, max),
@@ -94,14 +107,17 @@ impl Vec3 {
         )
     }
 
+    #[inline]
     pub fn mag(&self) -> f64 {
         self.mag_squared().sqrt()
     }
 
+    #[inline]
     pub fn mag_squared(&self) -> f64 {
         dot(self, self)
     }
 
+    #[inline]
     pub fn normalized(&self) -> Vec3 {
         *self / self.mag()
     }
@@ -129,6 +145,7 @@ pub fn random_unit_vector() -> Vec3 {
     random_in_unit_sphere().normalized()
 }
 
+#[inline]
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     *v - 2.0 * dot(v, n) * *n
 }
@@ -140,6 +157,7 @@ pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
     r_out_perp + r_out_parallel
 }
 
+#[inline]
 pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     Vec3::new(
         u.y * v.z - u.z * v.y,
