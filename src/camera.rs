@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::util::Point3;
+use crate::util::{rand_range, Point3, Time};
 use crate::vec3::*;
 
 #[derive(Debug, Copy, Clone)]
@@ -12,6 +12,8 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     lens_radius: f64,
+    time0: Time,
+    time1: Time,
 }
 
 impl Camera {
@@ -23,6 +25,8 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
+        time0: Time,
+        time1: Time,
     ) -> Camera {
         let theta = vfov.to_radians();
         let h = (theta / 2.0).tan();
@@ -48,6 +52,8 @@ impl Camera {
             u,
             v,
             lens_radius,
+            time0,
+            time1,
         }
     }
 
@@ -57,6 +63,7 @@ impl Camera {
         Ray::new(
             self.origin + offset,
             self.lower_left + s * self.horizontal + t * self.vertical - self.origin - offset,
+            rand_range(self.time0, self.time1),
         )
     }
 }

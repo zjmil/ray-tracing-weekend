@@ -4,6 +4,7 @@ use crate::vec3::Vec3;
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
+pub type Time = f64;
 
 pub fn rand() -> f64 {
     thread_rng().gen()
@@ -25,6 +26,14 @@ pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
 
 pub fn min(a: f64, b: f64) -> f64 {
     if a < b {
+        a
+    } else {
+        b
+    }
+}
+
+pub fn max(a: f64, b: f64) -> f64 {
+    if a > b {
         a
     } else {
         b

@@ -1,6 +1,7 @@
 mod camera;
 mod hittable;
 mod material;
+mod moving_sphere;
 mod ray;
 mod sphere;
 mod util;
@@ -9,6 +10,7 @@ mod vec3;
 use camera::Camera;
 use hittable::Hittable;
 use material::*;
+use moving_sphere::MovingSphere;
 use ray::Ray;
 use rayon::prelude::*;
 use sphere::Sphere;
@@ -54,10 +56,11 @@ fn ray_color(r: Ray, hittable: &dyn Hittable, depth: i32) -> Color {
 
 fn main() {
     // Image
-    let aspect_ratio = 3.0 / 2.0;
-    let image_width = 1200;
+    // let aspect_ratio = 3.0 / 2.0;
+    let aspect_ratio = 16.0 / 9.0;
+    let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
-    let samples_per_pixel = 500;
+    let samples_per_pixel = 100;
     let max_depth = 50;
 
     // World
@@ -77,6 +80,8 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
+        0.0,
+        1.0,
     );
 
     let mut colors: Vec<(usize, Color)> = (0..image_height)
@@ -128,7 +133,17 @@ fn random_scene() -> Vec<Box<dyn Hittable + Send + Sync>> {
                 let sphere_mat: Arc<dyn Material + Send + Sync> = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    Arc::new(Lambertian::new(albedo))
+                    let mat = Arc::new(Lambertian::new(albedo));
+                    let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
+                    world.push(Box::new(MovingSphere::new(
+                        center,
+                        center2,
+                        0.0,
+                        1.0,
+                        0.2,
+                        mat.clone(),
+                    )));
+                    mat
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
