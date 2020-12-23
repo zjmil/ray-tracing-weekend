@@ -7,7 +7,12 @@ use std::sync::Arc;
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        Color::zero()
+    }
 }
+
+pub type SharedMaterial = Arc<dyn Material + Sync + Send>;
 
 pub struct Lambertian {
     albedo: SharedTexture,
@@ -107,4 +112,22 @@ impl Material for Dielectric {
     }
 }
 
-pub type SharedMaterial = Arc<dyn Material + Sync + Send>;
+pub struct DiffuseLight {
+    emit: SharedTexture,
+}
+
+impl DiffuseLight {
+    pub fn new(emit: SharedTexture) -> DiffuseLight {
+        DiffuseLight { emit }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<(Color, Ray)> {
+        None
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        self.emit.value(u, v, p)
+    }
+}

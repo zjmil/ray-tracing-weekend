@@ -39,22 +39,22 @@ fn write_color(color: &Color, samples_per_pixel: i32) {
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(r: Ray, hittable: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
+    // base case for ray bounce limit
     if depth <= 0 {
         return Color::zero();
     }
-    match hittable.hit(r, 0.001, INFINITY) {
-        Some(hit_record) => match hit_record.material.scatter(&r, &hit_record) {
-            Some((attenuation, scattered)) => {
-                attenuation * ray_color(scattered, hittable, depth - 1)
-            }
-            None => Color::zero(),
-        },
-        None => {
-            let unit_direction = r.direction.normalized();
-            let t = 0.5 * (unit_direction.y + 1.0);
-            (1.0 - t) * Color::one() + t * Color::new(0.5, 0.7, 1.0)
+
+    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
+        let emitted = rec.material.emitted(rec.u, rec.v, rec.p);
+
+        if let Some((attenuation, scattered)) = rec.material.scatter(&r, &rec) {
+            emitted + attenuation * ray_color(scattered, background, world, depth + 1)
+        } else {
+            emitted
         }
+    } else {
+        background
     }
 }
 
@@ -73,11 +73,13 @@ fn main() {
     let vup = Point3::new(0.0, 1.0, 0.0);
     let mut vfov = 40.0;
     let mut aperture = 0.0;
+    let mut background = Color::zero();
 
     let world_num = 4;
     match world_num {
         1 => {
             world = random_scene();
+            background = Color::new(0.7, 0.8, 1.0);
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
@@ -85,18 +87,21 @@ fn main() {
         }
         2 => {
             world = two_spheres();
+            background = Color::new(0.7, 0.8, 1.0);
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
         }
         3 => {
             world = two_perlin_spheres();
+            background = Color::new(0.7, 0.8, 1.0);
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
         }
         4 => {
             world = earth();
+            background = Color::new(0.7, 0.8, 1.0);
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
@@ -130,7 +135,7 @@ fn main() {
                 let v = (j as f64 + rand()) / (image_height - 1) as f64;
 
                 let r = camera.get_ray(u, v);
-                color = color + ray_color(r, &world, max_depth);
+                color = color + ray_color(r, background, &world, max_depth);
             }
             (n, color)
         })
