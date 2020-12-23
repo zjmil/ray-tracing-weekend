@@ -1,14 +1,16 @@
+mod aabb;
 mod camera;
 mod hittable;
 mod material;
 mod moving_sphere;
 mod ray;
 mod sphere;
+mod texture;
 mod util;
 mod vec3;
 
 use camera::Camera;
-use hittable::Hittable;
+use hittable::{Hittable, SharedHittable};
 use material::*;
 use moving_sphere::MovingSphere;
 use ray::Ray;
@@ -16,6 +18,7 @@ use rayon::prelude::*;
 use sphere::Sphere;
 use std::iter;
 use std::sync::Arc;
+use texture::*;
 use util::*;
 use vec3::*;
 
@@ -112,11 +115,15 @@ fn main() {
     eprintln!("\nDone.");
 }
 
-fn random_scene() -> Vec<Box<dyn Hittable + Send + Sync>> {
-    let mut world: Vec<Box<dyn Hittable + Send + Sync>> = Vec::new();
+fn random_scene() -> Vec<SharedHittable> {
+    let mut world: Vec<SharedHittable> = Vec::new();
 
-    let ground_mat: Arc<dyn Material + Send + Sync> =
-        Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let checker: SharedTexture = Arc::new(Checker::new(
+        Arc::new(SolidColor::new(Color::new(0.2, 0.3, 0.1))),
+        Arc::new(SolidColor::new(Color::new(0.9, 0.9, 0.9))),
+    ));
+
+    let ground_mat: SharedMaterial = Arc::new(Lambertian::newt(checker));
     let ground = Box::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -130,7 +137,7 @@ fn random_scene() -> Vec<Box<dyn Hittable + Send + Sync>> {
             let center = Point3::new(a as f64 + 0.9 * rand(), 0.2, b as f64 + 0.9 * rand());
 
             if (center - Point3::new(4.0, 0.2, 0.0)).mag() > 0.9 {
-                let sphere_mat: Arc<dyn Material + Send + Sync> = if choose_mat < 0.8 {
+                let sphere_mat: SharedMaterial = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     let mat = Arc::new(Lambertian::new(albedo));

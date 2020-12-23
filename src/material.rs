@@ -1,5 +1,6 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
+use crate::texture::{SharedTexture, SolidColor};
 use crate::util::*;
 use crate::vec3::*;
 use std::sync::Arc;
@@ -9,11 +10,16 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    albedo: Color,
+    albedo: SharedTexture,
 }
 
 impl Lambertian {
     pub fn new(albedo: Color) -> Lambertian {
+        let texture: SharedTexture = Arc::new(SolidColor::new(albedo));
+        Lambertian::newt(texture)
+    }
+
+    pub fn newt(albedo: SharedTexture) -> Lambertian {
         Lambertian { albedo }
     }
 }
@@ -26,7 +32,8 @@ impl Material for Lambertian {
         }
 
         let scattered = Ray::new(rec.p, scatter_direction, r_in.time);
-        Some((self.albedo, scattered))
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
+        Some((attenuation, scattered))
     }
 }
 

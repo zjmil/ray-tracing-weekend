@@ -37,6 +37,15 @@ pub fn min(a: f64, b: f64) -> f64 {
 }
 
 #[inline]
+pub fn max(a: f64, b: f64) -> f64 {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+#[inline]
 pub fn square(x: f64) -> f64 {
     x.powi(2)
 }

@@ -72,6 +72,19 @@ impl ops::Div<f64> for Vec3 {
     }
 }
 
+impl ops::Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        match idx {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of range!"),
+        }
+    }
+}
+
 #[inline]
 pub fn dot(v: &Vec3, u: &Vec3) -> f64 {
     v.x * u.x + v.y * u.y + v.z * u.z
@@ -120,6 +133,11 @@ impl Vec3 {
     #[inline]
     pub fn normalized(&self) -> Vec3 {
         *self / self.mag()
+    }
+
+    #[inline]
+    pub fn as_tuple(&self) -> (f64, f64, f64) {
+        (self.x, self.y, self.z)
     }
 
     pub fn abs(&self) -> Vec3 {
