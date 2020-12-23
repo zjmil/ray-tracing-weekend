@@ -74,7 +74,7 @@ fn main() {
     let mut vfov = 40.0;
     let mut aperture = 0.0;
 
-    let world_num = 3;
+    let world_num = 4;
     match world_num {
         1 => {
             world = random_scene();
@@ -91,6 +91,12 @@ fn main() {
         }
         3 => {
             world = two_perlin_spheres();
+            look_from = Point3::new(13.0, 2.0, 3.0);
+            look_at = Point3::zero();
+            vfov = 20.0;
+        }
+        4 => {
+            world = earth();
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
@@ -233,4 +239,13 @@ fn two_perlin_spheres() -> Vec<SharedHittable> {
     )));
 
     hittables
+}
+
+fn earth() -> Vec<SharedHittable> {
+    let earth_texture = Arc::new(Image::new("./earthmap.jpg"));
+    let earth_surface = Arc::new(Lambertian::new(earth_texture));
+    let globe = Box::new(Sphere::new(Point3::zero(), 2.0, earth_surface));
+
+    let world: Vec<SharedHittable> = vec![globe];
+    world
 }
