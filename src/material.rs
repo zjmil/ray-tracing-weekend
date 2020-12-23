@@ -1,6 +1,6 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::texture::{SharedTexture, SolidColor};
+use crate::texture::SharedTexture;
 use crate::util::*;
 use crate::vec3::*;
 use std::sync::Arc;
@@ -14,12 +14,7 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(albedo: Color) -> Lambertian {
-        let texture: SharedTexture = Arc::new(SolidColor::new(albedo));
-        Lambertian::newt(texture)
-    }
-
-    pub fn newt(albedo: SharedTexture) -> Lambertian {
+    pub fn new(albedo: SharedTexture) -> Lambertian {
         Lambertian { albedo }
     }
 }

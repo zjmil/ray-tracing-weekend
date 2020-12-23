@@ -1,3 +1,4 @@
+use crate::perlin::Perlin;
 use crate::util::*;
 use std::sync::Arc;
 
@@ -42,5 +43,25 @@ impl Texture for Checker {
         } else {
             self.even.value(u, v, p)
         }
+    }
+}
+
+pub struct Noise {
+    noise: Perlin,
+    scale: f64,
+}
+
+impl Noise {
+    pub fn new(scale: f64) -> Noise {
+        Noise {
+            noise: Perlin::new(),
+            scale,
+        }
+    }
+}
+
+impl Texture for Noise {
+    fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
+        Color::one() * self.noise.noise(self.scale * p)
     }
 }

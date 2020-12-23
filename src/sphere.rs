@@ -73,7 +73,7 @@ impl Hittable for Sphere {
         ))
     }
 
-    fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {
+    fn bounding_box(&self, _t0: Time, _t1: Time) -> Option<AABB> {
         Some(AABB::new(
             self.center - Vec3::new(self.radius, self.radius, self.radius),
             self.center + Vec3::new(self.radius, self.radius, self.radius),

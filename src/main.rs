@@ -3,6 +3,7 @@ mod camera;
 mod hittable;
 mod material;
 mod moving_sphere;
+mod perlin;
 mod ray;
 mod sphere;
 mod texture;
@@ -66,20 +67,44 @@ fn main() {
     let samples_per_pixel = 100;
     let max_depth = 50;
 
-    // World
-    let world = random_scene();
+    let mut world: Vec<SharedHittable> = Vec::new();
+    let mut look_from = Point3::zero();
+    let mut look_at = Point3::zero();
+    let vup = Point3::new(0.0, 1.0, 0.0);
+    let mut vfov = 40.0;
+    let mut aperture = 0.0;
+
+    let world_num = 3;
+    match world_num {
+        1 => {
+            world = random_scene();
+            look_from = Point3::new(13.0, 2.0, 3.0);
+            look_at = Point3::zero();
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        2 => {
+            world = two_spheres();
+            look_from = Point3::new(13.0, 2.0, 3.0);
+            look_at = Point3::zero();
+            vfov = 20.0;
+        }
+        3 => {
+            world = two_perlin_spheres();
+            look_from = Point3::new(13.0, 2.0, 3.0);
+            look_at = Point3::zero();
+            vfov = 20.0;
+        }
+        _ => {}
+    }
 
     // Camera
-    let look_from = Point3::new(13.0, 2.0, 3.0);
-    let look_at = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let aperture = 0.1;
     let dist_to_focus = 10.0;
     let camera = Camera::new(
         look_from,
         look_at,
         vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,
@@ -123,7 +148,7 @@ fn random_scene() -> Vec<SharedHittable> {
         Arc::new(SolidColor::new(Color::new(0.9, 0.9, 0.9))),
     ));
 
-    let ground_mat: SharedMaterial = Arc::new(Lambertian::newt(checker));
+    let ground_mat: SharedMaterial = Arc::new(Lambertian::new(checker));
     let ground = Box::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -140,7 +165,7 @@ fn random_scene() -> Vec<SharedHittable> {
                 let sphere_mat: SharedMaterial = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    let mat = Arc::new(Lambertian::new(albedo));
+                    let mat = Arc::new(Lambertian::new(Arc::new(SolidColor::new(albedo))));
                     let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
                     world.push(Box::new(MovingSphere::new(
                         center,
@@ -168,4 +193,44 @@ fn random_scene() -> Vec<SharedHittable> {
     }
 
     world
+}
+
+fn two_spheres() -> Vec<SharedHittable> {
+    let checker: SharedTexture = Arc::new(Checker::new(
+        Arc::new(SolidColor::new(Color::new(0.2, 0.3, 0.1))),
+        Arc::new(SolidColor::new(Color::new(0.9, 0.9, 0.9))),
+    ));
+
+    let world: Vec<SharedHittable> = vec![
+        Box::new(Sphere::new(
+            Point3::new(0.0, -10.0, 0.0),
+            10.0,
+            Arc::new(Lambertian::new(checker.clone())),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 10.0, 0.0),
+            10.0,
+            Arc::new(Lambertian::new(checker)),
+        )),
+    ];
+
+    world
+}
+
+fn two_perlin_spheres() -> Vec<SharedHittable> {
+    let mut hittables: Vec<SharedHittable> = Vec::new();
+
+    let noise = Arc::new(Noise::new(4.0));
+    hittables.push(Box::new(Sphere::new(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        Arc::new(Lambertian::new(noise.clone())),
+    )));
+    hittables.push(Box::new(Sphere::new(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::new(noise)),
+    )));
+
+    hittables
 }

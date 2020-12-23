@@ -140,6 +140,11 @@ impl Vec3 {
         (self.x, self.y, self.z)
     }
 
+    #[inline]
+    pub fn floor(&self) -> Vec3 {
+        Vec3::new(self.x.floor(), self.y.floor(), self.z.floor())
+    }
+
     pub fn abs(&self) -> Vec3 {
         Vec3::new(self.x.abs(), self.y.abs(), self.z.abs())
     }
