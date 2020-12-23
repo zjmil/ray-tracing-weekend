@@ -62,6 +62,6 @@ impl Noise {
 
 impl Texture for Noise {
     fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
-        Color::one() * self.noise.noise(self.scale * p)
+        Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.turbulance(p)).sin())
     }
 }

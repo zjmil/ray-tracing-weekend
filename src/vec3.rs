@@ -145,8 +145,19 @@ impl Vec3 {
         Vec3::new(self.x.floor(), self.y.floor(), self.z.floor())
     }
 
+    #[inline]
     pub fn abs(&self) -> Vec3 {
         Vec3::new(self.x.abs(), self.y.abs(), self.z.abs())
+    }
+
+    #[inline]
+    pub fn sub(&self) -> f64 {
+        self.x + self.y + self.z
+    }
+
+    #[inline]
+    pub fn product(&self) -> f64 {
+        self.x * self.y * self.z
     }
 
     pub fn near_zero(&self) -> bool {

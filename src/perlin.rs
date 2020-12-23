@@ -1,9 +1,9 @@
 use crate::util::Point3;
-use rand::distributions::Standard;
+use crate::vec3::*;
 use rand::prelude::*;
 
 pub struct Perlin {
-    floats: Vec<f64>,
+    vecs: Vec<Vec3>,
     permx: Vec<usize>,
     permy: Vec<usize>,
     permz: Vec<usize>,
@@ -13,7 +13,7 @@ impl Perlin {
     pub fn new() -> Perlin {
         let mut rng = thread_rng();
         let size = 256;
-        let floats = rng.sample_iter(&Standard).take(size).collect();
+        let vecs = (0..size).map(|_| Vec3::random_range(-1.0, 1.0)).collect();
 
         let mut permx: Vec<_> = (0..size).collect();
         permx.shuffle(&mut rng);
@@ -23,7 +23,7 @@ impl Perlin {
         permz.shuffle(&mut rng);
 
         Perlin {
-            floats,
+            vecs,
             permx,
             permy,
             permz,
@@ -40,7 +40,7 @@ impl Perlin {
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
 
-        let mut c: [[[f64; 2]; 2]; 2] = [[[0.0; 2]; 2]; 2];
+        let mut c: [[[Vec3; 2]; 2]; 2] = [[[Vec3::zero(); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -49,14 +49,16 @@ impl Perlin {
                     let yi = ((j + dj as i32) & 255) as usize;
                     let zi = ((k + dk as i32) & 255) as usize;
                     let fi = self.permx[xi] ^ self.permy[yi] ^ self.permz[zi];
-                    c[di][dj][dk] = self.floats[fi];
+                    c[di][dj][dk] = self.vecs[fi];
                 }
             }
         }
 
-        Self::trilinear_inerp(&c, u, v, w)
+        let p = Vec3::new(u, v, w);
+        Self::perlin_interp(&c, p)
     }
 
+    /*
     fn trilinear_inerp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
         let mut acc = 0.0;
 
@@ -76,5 +78,40 @@ impl Perlin {
         }
 
         acc
+    }
+    */
+
+    fn perlin_interp(c: &[[[Vec3; 2]; 2]; 2], p: Vec3) -> f64 {
+        let pp = p * p * (Vec3::new(3.0, 3.0, 3.0) - 2.0 * p);
+        let mut acc = 0.0;
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let ijk = Vec3::new(i as f64, j as f64, k as f64);
+
+                    let weight_v = p - ijk;
+                    acc += (ijk * pp + (Vec3::one() - ijk) * (Vec3::one() - pp)).product()
+                        * dot(&c[i][j][k], &weight_v);
+                }
+            }
+        }
+
+        acc
+    }
+
+    pub fn turbulance(&self, p: Point3) -> f64 {
+        let depth = 7;
+        let mut temp_p = p;
+        let mut acc = 0.0;
+        let mut weight = 1.0;
+
+        for _ in 0..depth {
+            acc += weight * self.noise(temp_p);
+            weight *= 0.5;
+            temp_p = 2.0 * temp_p;
+        }
+
+        acc.abs()
     }
 }
