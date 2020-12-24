@@ -11,7 +11,7 @@ mod texture;
 mod util;
 mod vec3;
 
-use aarect::XYRect;
+use aarect::Rect2D;
 use camera::Camera;
 use hittable::{Hittable, SharedHittable};
 use material::*;
@@ -68,7 +68,7 @@ fn parse_arguments() -> ProgramArgs {
     let args: Vec<String> = env::args().collect();
     let mut it = args.iter();
 
-    let mut args = ProgramArgs { scene: 1 };
+    let mut args = ProgramArgs { scene: -1 };
 
     while let Some(val) = it.next() {
         if val == "-s" || val == "--scene" {
@@ -129,7 +129,7 @@ fn main() {
             look_at = Point3::zero();
             vfov = 20.0;
         }
-        5 => {
+        5 | _ => {
             world = simple_light();
             samples_per_pixel = 400;
             background = Color::zero();
@@ -137,7 +137,6 @@ fn main() {
             look_at = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
-        _ => {}
     }
 
     // Camera
@@ -280,6 +279,6 @@ fn simple_light() -> Vec<SharedHittable> {
             Lambertian::new(noise.clone()),
         ),
         Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
-        XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
+        // Rect2D::new_xy(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
     ]
 }

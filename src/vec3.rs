@@ -80,6 +80,15 @@ impl ops::Div<f64> for Vec3 {
     }
 }
 
+impl ops::Div<Vec3> for Vec3 {
+    type Output = Self;
+
+    #[inline]
+    fn div(self, v: Self) -> Self {
+        Self::new(self.x / v.x, self.y / v.x, self.z / v.z)
+    }
+}
+
 impl ops::Index<usize> for Vec3 {
     type Output = f64;
 
@@ -88,6 +97,17 @@ impl ops::Index<usize> for Vec3 {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
+            _ => panic!("Index out of range!"),
+        }
+    }
+}
+
+impl ops::IndexMut<usize> for Vec3 {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        match idx {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _ => panic!("Index out of range!"),
         }
     }
