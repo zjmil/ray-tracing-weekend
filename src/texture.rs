@@ -1,8 +1,7 @@
 use crate::perlin::Perlin;
 use crate::util::*;
 use image::io::Reader as ImageReader;
-use image::Pixel;
-use image::RgbImage;
+use image::{Pixel, RgbImage};
 use std::sync::Arc;
 
 pub trait Texture {
@@ -16,8 +15,8 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
-    pub fn new(color: Color) -> SolidColor {
-        SolidColor { color }
+    pub fn new(color: Color) -> SharedTexture {
+        Arc::new(SolidColor { color })
     }
 }
 
@@ -33,8 +32,8 @@ pub struct Checker {
 }
 
 impl Checker {
-    pub fn new(odd: SharedTexture, even: SharedTexture) -> Checker {
-        Checker { odd, even }
+    pub fn new(odd: SharedTexture, even: SharedTexture) -> SharedTexture {
+        Arc::new(Checker { odd, even })
     }
 }
 
@@ -55,11 +54,11 @@ pub struct Noise {
 }
 
 impl Noise {
-    pub fn new(scale: f64) -> Noise {
-        Noise {
+    pub fn new(scale: f64) -> SharedTexture {
+        Arc::new(Noise {
             noise: Perlin::new(),
             scale,
-        }
+        })
     }
 }
 
@@ -74,13 +73,13 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(filename: &str) -> Image {
+    pub fn new(filename: &str) -> SharedTexture {
         let image = ImageReader::open(filename)
             .unwrap()
             .decode()
             .unwrap()
             .to_rgb8();
-        Image { image }
+        Arc::new(Image { image })
     }
 }
 

@@ -1,8 +1,8 @@
 use crate::aabb::AABB;
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::{HitRecord, Hittable, SharedHittable};
 use crate::material::SharedMaterial;
 use crate::ray::Ray;
-use crate::util::{square, Point3, Time};
+use crate::util::{Point3, Time};
 use crate::vec3::{dot, Vec3};
 use std::f64::consts::PI;
 
@@ -13,12 +13,12 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f64, material: SharedMaterial) -> Sphere {
-        Sphere {
+    pub fn new(center: Point3, radius: f64, material: SharedMaterial) -> SharedHittable {
+        Box::new(Sphere {
             center,
             radius,
             material,
-        }
+        })
     }
 }
 
@@ -41,10 +41,10 @@ impl Hittable for Sphere {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.mag_squared();
-        let half_b = dot(&oc, &r.direction);
-        let c = oc.mag_squared() - square(self.radius);
+        let half_b = dot(oc, r.direction);
+        let c = oc.mag_squared() - self.radius.powi(2);
 
-        let discriminant = square(half_b) - a * c;
+        let discriminant = half_b.powi(2) - a * c;
         if discriminant < 0.0 {
             return None;
         }
@@ -68,15 +68,13 @@ impl Hittable for Sphere {
             u,
             v,
             r,
-            &outward_normal,
+            outward_normal,
             self.material.clone(),
         ))
     }
 
     fn bounding_box(&self, _t0: Time, _t1: Time) -> Option<AABB> {
-        Some(AABB::new(
-            self.center - Vec3::new(self.radius, self.radius, self.radius),
-            self.center + Vec3::new(self.radius, self.radius, self.radius),
-        ))
+        let rvec = Vec3::full(self.radius);
+        Some(AABB::new(self.center - rvec, self.center + rvec))
     }
 }

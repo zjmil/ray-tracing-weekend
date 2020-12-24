@@ -13,10 +13,6 @@ impl AABB {
         AABB { min, max }
     }
 
-    pub fn zero() -> AABB {
-        AABB::new(Point3::zero(), Point3::zero())
-    }
-
     pub fn hit(&self, r: &Ray, t_min_init: f64, t_max_init: f64) -> bool {
         let mut t_min = t_min_init;
         let mut t_max = t_max_init;

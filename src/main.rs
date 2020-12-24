@@ -1,4 +1,5 @@
 mod aabb;
+mod aarect;
 mod camera;
 mod hittable;
 mod material;
@@ -10,6 +11,7 @@ mod texture;
 mod util;
 mod vec3;
 
+use aarect::XYRect;
 use camera::Camera;
 use hittable::{Hittable, SharedHittable};
 use material::*;
@@ -17,8 +19,8 @@ use moving_sphere::MovingSphere;
 use ray::Ray;
 use rayon::prelude::*;
 use sphere::Sphere;
+use std::env;
 use std::iter;
-use std::sync::Arc;
 use texture::*;
 use util::*;
 use vec3::*;
@@ -49,7 +51,7 @@ fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Col
         let emitted = rec.material.emitted(rec.u, rec.v, rec.p);
 
         if let Some((attenuation, scattered)) = rec.material.scatter(&r, &rec) {
-            emitted + attenuation * ray_color(scattered, background, world, depth + 1)
+            emitted + attenuation * ray_color(scattered, background, world, depth - 1)
         } else {
             emitted
         }
@@ -58,13 +60,35 @@ fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Col
     }
 }
 
+struct ProgramArgs {
+    scene: i32,
+}
+
+fn parse_arguments() -> ProgramArgs {
+    let args: Vec<String> = env::args().collect();
+    let mut it = args.iter();
+
+    let mut args = ProgramArgs { scene: 1 };
+
+    while let Some(val) = it.next() {
+        if val == "-s" || val == "--scene" {
+            // TODO: error when no arg provided
+            args.scene = it.next().and_then(|s| s.parse().ok()).unwrap_or(args.scene);
+        }
+    }
+
+    args
+}
+
 fn main() {
+    let args = parse_arguments();
+
     // Image
     // let aspect_ratio = 3.0 / 2.0;
     let aspect_ratio = 16.0 / 9.0;
     let image_width = 400;
     let image_height = (image_width as f64 / aspect_ratio) as i32;
-    let samples_per_pixel = 100;
+    let mut samples_per_pixel = 100;
     let max_depth = 50;
 
     let mut world: Vec<SharedHittable> = Vec::new();
@@ -75,8 +99,7 @@ fn main() {
     let mut aperture = 0.0;
     let mut background = Color::zero();
 
-    let world_num = 4;
-    match world_num {
+    match args.scene {
         1 => {
             world = random_scene();
             background = Color::new(0.7, 0.8, 1.0);
@@ -104,6 +127,14 @@ fn main() {
             background = Color::new(0.7, 0.8, 1.0);
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
+            vfov = 20.0;
+        }
+        5 => {
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = Color::zero();
+            look_from = Point3::new(26.0, 3.0, 6.0);
+            look_at = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
         _ => {}
@@ -135,7 +166,7 @@ fn main() {
                 let v = (j as f64 + rand()) / (image_height - 1) as f64;
 
                 let r = camera.get_ray(u, v);
-                color = color + ray_color(r, background, &world, max_depth);
+                color += ray_color(r, background, &world, max_depth);
             }
             (n, color)
         })
@@ -152,19 +183,15 @@ fn main() {
 }
 
 fn random_scene() -> Vec<SharedHittable> {
-    let mut world: Vec<SharedHittable> = Vec::new();
+    let mut world = Vec::new();
 
-    let checker: SharedTexture = Arc::new(Checker::new(
-        Arc::new(SolidColor::new(Color::new(0.2, 0.3, 0.1))),
-        Arc::new(SolidColor::new(Color::new(0.9, 0.9, 0.9))),
-    ));
+    let checker = Checker::new(
+        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    );
 
-    let ground_mat: SharedMaterial = Arc::new(Lambertian::new(checker));
-    let ground = Box::new(Sphere::new(
-        Point3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        ground_mat,
-    ));
+    let ground_mat = Lambertian::new(checker);
+    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
     world.push(ground);
 
     for a in -11..11 {
@@ -176,28 +203,28 @@ fn random_scene() -> Vec<SharedHittable> {
                 let sphere_mat: SharedMaterial = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    let mat = Arc::new(Lambertian::new(Arc::new(SolidColor::new(albedo))));
+                    let mat = Lambertian::new(SolidColor::new(albedo));
                     let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
-                    world.push(Box::new(MovingSphere::new(
+                    world.push(MovingSphere::new(
                         center,
                         center2,
                         0.0,
                         1.0,
                         0.2,
                         mat.clone(),
-                    )));
+                    ));
                     mat
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = rand_range(0.0, 0.5);
-                    Arc::new(Metal::new(albedo, fuzz))
+                    Metal::new(albedo, fuzz)
                 } else {
                     // glass
-                    Arc::new(Dielectric::new(1.5))
+                    Dielectric::new(1.5)
                 };
 
-                let sphere = Box::new(Sphere::new(center, 0.2, sphere_mat));
+                let sphere = Sphere::new(center, 0.2, sphere_mat);
                 world.push(sphere);
             }
         }
@@ -207,50 +234,52 @@ fn random_scene() -> Vec<SharedHittable> {
 }
 
 fn two_spheres() -> Vec<SharedHittable> {
-    let checker: SharedTexture = Arc::new(Checker::new(
-        Arc::new(SolidColor::new(Color::new(0.2, 0.3, 0.1))),
-        Arc::new(SolidColor::new(Color::new(0.9, 0.9, 0.9))),
-    ));
+    let checker = Checker::new(
+        SolidColor::new(Color::new(0.2, 0.3, 0.1)),
+        SolidColor::new(Color::new(0.9, 0.9, 0.9)),
+    );
 
-    let world: Vec<SharedHittable> = vec![
-        Box::new(Sphere::new(
+    vec![
+        Sphere::new(
             Point3::new(0.0, -10.0, 0.0),
             10.0,
-            Arc::new(Lambertian::new(checker.clone())),
-        )),
-        Box::new(Sphere::new(
-            Point3::new(0.0, 10.0, 0.0),
-            10.0,
-            Arc::new(Lambertian::new(checker)),
-        )),
-    ];
-
-    world
+            Lambertian::new(checker.clone()),
+        ),
+        Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, Lambertian::new(checker)),
+    ]
 }
 
 fn two_perlin_spheres() -> Vec<SharedHittable> {
-    let mut hittables: Vec<SharedHittable> = Vec::new();
+    let noise = Noise::new(4.0);
 
-    let noise = Arc::new(Noise::new(4.0));
-    hittables.push(Box::new(Sphere::new(
-        Point3::new(0.0, -1000.0, 0.0),
-        1000.0,
-        Arc::new(Lambertian::new(noise.clone())),
-    )));
-    hittables.push(Box::new(Sphere::new(
-        Point3::new(0.0, 2.0, 0.0),
-        2.0,
-        Arc::new(Lambertian::new(noise)),
-    )));
-
-    hittables
+    vec![
+        Sphere::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Lambertian::new(noise.clone()),
+        ),
+        Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
+    ]
 }
 
 fn earth() -> Vec<SharedHittable> {
-    let earth_texture = Arc::new(Image::new("./earthmap.jpg"));
-    let earth_surface = Arc::new(Lambertian::new(earth_texture));
-    let globe = Box::new(Sphere::new(Point3::zero(), 2.0, earth_surface));
+    let earth_texture = Image::new("./earthmap.jpg");
+    let earth_surface = Lambertian::new(earth_texture);
 
-    let world: Vec<SharedHittable> = vec![globe];
-    world
+    vec![Sphere::new(Point3::zero(), 2.0, earth_surface)]
+}
+
+fn simple_light() -> Vec<SharedHittable> {
+    let noise = Noise::new(4.0);
+    let difflight = DiffuseLight::new(SolidColor::new(Color::new(4.0, 4.0, 4.0)));
+
+    vec![
+        Sphere::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Lambertian::new(noise.clone()),
+        ),
+        Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
+        XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
+    ]
 }

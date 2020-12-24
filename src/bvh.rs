@@ -5,7 +5,6 @@ use crate::util::*;
 use rand::prelude::*;
 
 
-
 pub struct BvhNode {
     left: SharedHittable,
     right: SharedHittable,

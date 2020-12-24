@@ -23,14 +23,14 @@ impl HitRecord {
         u: f64,
         v: f64,
         ray: Ray,
-        outward_normal: &Vec3,
+        outward_normal: Vec3,
         material: SharedMaterial,
     ) -> HitRecord {
-        let front_face = dot(&ray.direction, outward_normal) < 0.0;
+        let front_face = dot(ray.direction, outward_normal) < 0.0;
         let normal = if front_face {
-            *outward_normal
+            outward_normal
         } else {
-            -*outward_normal
+            -outward_normal
         };
         HitRecord {
             p,
@@ -48,6 +48,8 @@ pub trait Hittable {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB>;
 }
+
+pub type SharedHittable = Box<dyn Hittable + Send + Sync>;
 
 impl Hittable for Vec<SharedHittable> {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
@@ -80,5 +82,3 @@ impl Hittable for Vec<SharedHittable> {
         acc
     }
 }
-
-pub type SharedHittable = Box<dyn Hittable + Send + Sync>;

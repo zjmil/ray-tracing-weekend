@@ -44,8 +44,3 @@ pub fn max(a: f64, b: f64) -> f64 {
         b
     }
 }
-
-#[inline]
-pub fn square(x: f64) -> f64 {
-    x.powi(2)
-}

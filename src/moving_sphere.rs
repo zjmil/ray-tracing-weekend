@@ -1,5 +1,5 @@
 use crate::aabb::{surrounding_box, AABB};
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::{HitRecord, Hittable, SharedHittable};
 use crate::material::SharedMaterial;
 use crate::ray::Ray;
 use crate::util::*;
@@ -23,15 +23,15 @@ impl MovingSphere {
         time1: Time,
         radius: f64,
         material: SharedMaterial,
-    ) -> MovingSphere {
-        MovingSphere {
+    ) -> SharedHittable {
+        Box::new(MovingSphere {
             center0,
             center1,
             time0,
             time1,
             radius,
             material,
-        }
+        })
     }
 
     pub fn center(&self, time: Time) -> Point3 {
@@ -60,10 +60,10 @@ impl Hittable for MovingSphere {
     fn hit(&self, r: Ray, t_min: Time, t_max: Time) -> Option<HitRecord> {
         let oc = r.origin - self.center(r.time);
         let a = r.direction.mag_squared();
-        let half_b = dot(&oc, &r.direction);
-        let c = oc.mag_squared() - square(self.radius);
+        let half_b = dot(oc, r.direction);
+        let c = oc.mag_squared() - self.radius.powi(2);
 
-        let discriminant = square(half_b) - a * c;
+        let discriminant = half_b.powi(2) - a * c;
         if discriminant < 0.0 {
             return None;
         }
@@ -87,20 +87,17 @@ impl Hittable for MovingSphere {
             u,
             v,
             r,
-            &outward_normal,
+            outward_normal,
             self.material.clone(),
         ))
     }
 
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {
-        let box0 = AABB::new(
-            self.center(t0) - Vec3::new(self.radius, self.radius, self.radius),
-            self.center(t0) + Vec3::new(self.radius, self.radius, self.radius),
-        );
-        let box1 = AABB::new(
-            self.center(t1) - Vec3::new(self.radius, self.radius, self.radius),
-            self.center(t1) + Vec3::new(self.radius, self.radius, self.radius),
-        );
+        let rvec = Vec3::full(self.radius);
+        let ct0 = self.center(t0);
+        let ct1 = self.center(t1);
+        let box0 = AABB::new(ct0 - rvec, ct0 + rvec);
+        let box1 = AABB::new(ct1 - rvec, ct1 + rvec);
 
         Some(surrounding_box(&box0, &box1))
     }
