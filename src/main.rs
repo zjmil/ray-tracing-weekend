@@ -1,6 +1,7 @@
 mod aabb;
 mod aarect;
 mod camera;
+mod cube;
 mod hittable;
 mod material;
 mod moving_sphere;
@@ -13,6 +14,7 @@ mod vec3;
 
 use aarect::Rect2D;
 use camera::Camera;
+use cube::Cube;
 use hittable::{Hittable, SharedHittable};
 use material::*;
 use moving_sphere::MovingSphere;
@@ -141,7 +143,7 @@ fn main() {
             aspect_ratio = 1.0;
             image_width = 600;
             samples_per_pixel = 200;
-            background = Color::full(0.5);
+            background = Color::zero();
             look_from = Point3::new(278.0, 278.0, -800.0);
             look_at = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
@@ -309,5 +311,15 @@ fn cornell_box() -> Vec<SharedHittable> {
         Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 0.0, white.clone()),
         Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
         Rect2D::new_xy(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
+        Cube::new(
+            Point3::new(130.0, 0.0, 65.0),
+            Point3::new(295.0, 165.0, 230.0),
+            white.clone(),
+        ),
+        Cube::new(
+            Point3::new(265.0, 0.0, 295.0),
+            Point3::new(430.0, 330.0, 460.0),
+            white.clone(),
+        ),
     ]
 }
