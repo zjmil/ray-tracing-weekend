@@ -85,19 +85,18 @@ fn main() {
 
     // Image
     // let aspect_ratio = 3.0 / 2.0;
-    let aspect_ratio = 16.0 / 9.0;
-    let image_width = 400;
-    let image_height = (image_width as f64 / aspect_ratio) as i32;
+    let mut aspect_ratio = 16.0 / 9.0;
+    let mut image_width = 400;
     let mut samples_per_pixel = 100;
     let max_depth = 50;
 
-    let mut world: Vec<SharedHittable> = Vec::new();
-    let mut look_from = Point3::zero();
-    let mut look_at = Point3::zero();
+    let world: Vec<SharedHittable>;
+    let look_from;
+    let look_at;
     let vup = Point3::new(0.0, 1.0, 0.0);
-    let mut vfov = 40.0;
+    let vfov;
     let mut aperture = 0.0;
-    let mut background = Color::zero();
+    let background;
 
     match args.scene {
         1 => {
@@ -129,7 +128,7 @@ fn main() {
             look_at = Point3::zero();
             vfov = 20.0;
         }
-        5 | _ => {
+        5 => {
             world = simple_light();
             samples_per_pixel = 400;
             background = Color::zero();
@@ -137,7 +136,19 @@ fn main() {
             look_at = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
+        6 | _ => {
+            world = cornell_box();
+            aspect_ratio = 1.0;
+            image_width = 600;
+            samples_per_pixel = 200;
+            background = Color::full(0.5);
+            look_from = Point3::new(278.0, 278.0, -800.0);
+            look_at = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
     }
+
+    let image_height = (image_width as f64 / aspect_ratio) as i32;
 
     // Camera
     let dist_to_focus = 10.0;
@@ -177,6 +188,8 @@ fn main() {
     for (_, color) in colors.iter() {
         write_color(&color, samples_per_pixel);
     }
+
+    // TODO: add timer
 
     eprintln!("\nDone.");
 }
@@ -279,6 +292,22 @@ fn simple_light() -> Vec<SharedHittable> {
             Lambertian::new(noise.clone()),
         ),
         Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
-        // Rect2D::new_xy(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
+        Rect2D::new_xy(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
+    ]
+}
+
+fn cornell_box() -> Vec<SharedHittable> {
+    let red = Lambertian::new(SolidColor::new(Color::new(0.65, 0.05, 0.05)));
+    let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
+    let green = Lambertian::new(SolidColor::new(Color::new(0.12, 0.45, 0.15)));
+    let light = DiffuseLight::new(SolidColor::new(Color::new(15.0, 15.0, 15.0)));
+
+    vec![
+        Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 555.0, green),
+        Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 0.0, red),
+        Rect2D::new_xz(213.0, 343.0, 227.0, 332.0, 554.0, light),
+        Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 0.0, white.clone()),
+        Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
+        Rect2D::new_xy(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
     ]
 }

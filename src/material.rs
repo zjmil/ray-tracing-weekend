@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
         Color::zero()
     }
 }

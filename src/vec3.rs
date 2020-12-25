@@ -85,7 +85,7 @@ impl ops::Div<Vec3> for Vec3 {
 
     #[inline]
     fn div(self, v: Self) -> Self {
-        Self::new(self.x / v.x, self.y / v.x, self.z / v.z)
+        Self::new(self.x / v.x, self.y / v.y, self.z / v.z)
     }
 }
 
