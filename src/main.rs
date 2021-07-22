@@ -28,6 +28,7 @@ use util::*;
 use vec3::*;
 
 use std::f64::INFINITY;
+use std::time::SystemTime;
 
 fn write_color(color: &Color, samples_per_pixel: i32) {
     // Divide the color by the number of samples and gamma-correct for gamma=2.0
@@ -70,11 +71,10 @@ fn parse_arguments() -> ProgramArgs {
     let args: Vec<String> = env::args().collect();
     let mut it = args.iter();
 
-    let mut args = ProgramArgs { scene: -1 };
+    let mut args = ProgramArgs { scene: 1 };
 
     while let Some(val) = it.next() {
         if val == "-s" || val == "--scene" {
-            // TODO: error when no arg provided
             args.scene = it.next().and_then(|s| s.parse().ok()).unwrap_or(args.scene);
         }
     }
@@ -166,6 +166,8 @@ fn main() {
         1.0,
     );
 
+    let start_time = SystemTime::now();
+
     let mut colors: Vec<(usize, Color)> = (0..image_height)
         .rev()
         .flat_map(|j| (0..image_width).zip(iter::repeat(j)))
@@ -191,9 +193,9 @@ fn main() {
         write_color(&color, samples_per_pixel);
     }
 
-    // TODO: add timer
+    let total_time = start_time.elapsed().unwrap();
 
-    eprintln!("\nDone.");
+    eprintln!("\nDone. Seconds = {}", total_time.as_secs_f32());
 }
 
 fn random_scene() -> Vec<SharedHittable> {
