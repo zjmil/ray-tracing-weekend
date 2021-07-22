@@ -43,7 +43,7 @@ fn write_color(color: &Color, samples_per_pixel: i32) {
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
     // base case for ray bounce limit
     if depth <= 0 {
         return Color::zero();
@@ -53,7 +53,7 @@ fn ray_color(r: Ray, background: Color, world: &dyn Hittable, depth: i32) -> Col
         let emitted = rec.material.emitted(rec.u, rec.v, rec.p);
 
         if let Some((attenuation, scattered)) = rec.material.scatter(&r, &rec) {
-            emitted + attenuation * ray_color(scattered, background, world, depth - 1)
+            emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
         } else {
             emitted
         }
@@ -178,7 +178,7 @@ fn main() {
                 let v = (j as f64 + rand()) / (image_height - 1) as f64;
 
                 let r = camera.get_ray(u, v);
-                color += ray_color(r, background, &world, max_depth);
+                color += ray_color(&r, background, &world, max_depth);
             }
             (n, color)
         })

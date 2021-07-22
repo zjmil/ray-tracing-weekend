@@ -38,10 +38,10 @@ fn get_sphere_uv(p: &Point3) -> (f64, f64) {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.mag_squared();
-        let half_b = dot(oc, r.direction);
+        let half_b = dot(&oc, &r.direction);
         let c = oc.mag_squared() - self.radius.powi(2);
 
         let discriminant = half_b.powi(2) - a * c;
@@ -67,8 +67,8 @@ impl Hittable for Sphere {
             root,
             u,
             v,
-            r,
-            outward_normal,
+            &r,
+            &outward_normal,
             self.material.clone(),
         ))
     }

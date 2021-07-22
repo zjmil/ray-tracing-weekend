@@ -99,7 +99,7 @@ impl Rect2D {
 }
 
 impl Hittable for Rect2D {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // TODO: refactor
         let (t, u, v, outward_normal) = match self.missing {
             Missing::Z => {
@@ -162,7 +162,7 @@ impl Hittable for Rect2D {
             u,
             v,
             r,
-            outward_normal,
+            &outward_normal,
             self.material.clone(),
         ))
     }

@@ -92,7 +92,7 @@ impl Perlin {
 
                     let weight_v = p - ijk;
                     acc += (ijk * pp + (Vec3::one() - ijk) * (Vec3::one() - pp)).product()
-                        * dot(c[i][j][k], weight_v);
+                        * dot(&c[i][j][k], &weight_v);
                 }
             }
         }

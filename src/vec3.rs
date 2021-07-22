@@ -155,7 +155,7 @@ impl Vec3 {
 
     #[inline]
     pub fn mag_squared(&self) -> f64 {
-        dot(*self, *self)
+        dot(self, self)
     }
 
     #[inline]
@@ -208,19 +208,19 @@ pub fn random_unit_vector() -> Vec3 {
 }
 
 #[inline]
-pub fn dot(v: Vec3, u: Vec3) -> f64 {
-    (v * u).sum()
+pub fn dot(v: &Vec3, u: &Vec3) -> f64 {
+    v.x * u.x + v.y * u.y + v.z * u.z
 }
 
 #[inline]
-pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - 2.0 * dot(v, n) * n
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    *v - 2.0 * dot(v, n) * *n
 }
 
-pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = min(dot(-uv, n), 1.0);
-    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * n;
+pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = min(dot(&-*uv, n), 1.0);
+    let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
+    let r_out_parallel = -(1.0 - r_out_perp.mag_squared()).abs().sqrt() * *n;
     r_out_perp + r_out_parallel
 }
 
@@ -286,7 +286,7 @@ mod tests {
     #[test]
     fn test_dot() {
         assert!(fapprox_eq(
-            dot(Vec3::new(1.0, 3.0, -5.0), Vec3::new(4.0, -2.0, -1.0)),
+            dot(&Vec3::new(1.0, 3.0, -5.0), &Vec3::new(4.0, -2.0, -1.0)),
             3.0
         ))
     }

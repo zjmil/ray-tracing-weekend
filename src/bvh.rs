@@ -38,7 +38,7 @@ impl BvhNode {
         let (left, right) = if objects.len() == 1 {
             (objects[0], objects[0])
         } else {
-            let mut v = Vec::clone_from_slize(objects);
+            let mut v = Vec::clone_from_slice(objects);
             v.sort_by(comparator);
             let mid = objects.len() / 2;
 

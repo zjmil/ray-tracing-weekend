@@ -53,14 +53,14 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected = reflect(r_in.direction.normalized(), rec.normal);
+        let reflected = reflect(&r_in.direction.normalized(), &rec.normal);
         let scattered = Ray::new(
             rec.p,
             reflected + self.fuzz * random_in_unit_sphere(),
             r_in.time,
         );
 
-        if dot(scattered.direction, rec.normal) > 0.0 {
+        if dot(&scattered.direction, &rec.normal) > 0.0 {
             Some((self.albedo, scattered))
         } else {
             None
@@ -96,15 +96,15 @@ impl Material for Dielectric {
 
         let unit_direction = r_in.direction.normalized();
 
-        let cos_theta = min(dot(-unit_direction, rec.normal), 1.0);
+        let cos_theta = min(dot(&-unit_direction, &rec.normal), 1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
         let direction = if refraction_ratio * sin_theta > 1.0
             || Dielectric::reflectance(cos_theta, refraction_ratio) > rand()
         {
-            reflect(unit_direction, rec.normal)
+            reflect(&unit_direction, &rec.normal)
         } else {
-            refract(unit_direction, rec.normal, refraction_ratio)
+            refract(&unit_direction, &rec.normal, refraction_ratio)
         };
 
         let scattered = Ray::new(rec.p, direction, r_in.time);
