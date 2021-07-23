@@ -33,25 +33,21 @@ use std::time::SystemTime;
 fn write_color(color: &Color, samples_per_pixel: i32) {
     // Divide the color by the number of samples and gamma-correct for gamma=2.0
     let scale = 1.0 / (samples_per_pixel as f64);
-    let sr = (scale * color.x).sqrt();
-    let sg = (scale * color.y).sqrt();
-    let sb = (scale * color.z).sqrt();
-
-    let r = (256.0 * clamp(sr, 0.0, 0.999)) as i32;
-    let g = (256.0 * clamp(sg, 0.0, 0.999)) as i32;
-    let b = (256.0 * clamp(sb, 0.0, 0.999)) as i32;
+    let sc = (scale * color).sqrt();
+    let (fr, fg, fb) = (256.0 * sc.clamp(0.0, 0.999)).as_tuple();
+    let (r, g, b) = (fr as i32, fg as i32, fb as i32);
 
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: &Ray, background: &Color, world: &dyn Hittable, depth: i32) -> Color {
     // base case for ray bounce limit
     if depth <= 0 {
         return Color::zero();
     }
 
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted = rec.material.emitted(rec.u, rec.v, rec.p);
+        let emitted = rec.material.emitted(rec.u, rec.v, &rec.p);
 
         if let Some((attenuation, scattered)) = rec.material.scatter(&r, &rec) {
             emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
@@ -59,7 +55,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
             emitted
         }
     } else {
-        background
+        *background
     }
 }
 
@@ -155,9 +151,9 @@ fn main() {
     // Camera
     let dist_to_focus = 10.0;
     let camera = Camera::new(
-        look_from,
-        look_at,
-        vup,
+        &look_from,
+        &look_at,
+        &vup,
         vfov,
         aspect_ratio,
         aperture,
@@ -180,7 +176,7 @@ fn main() {
                 let v = (j as f64 + rand()) / (image_height - 1) as f64;
 
                 let r = camera.get_ray(u, v);
-                color += ray_color(&r, background, &world, max_depth);
+                color += ray_color(&r, &background, &world, max_depth);
             }
             (n, color)
         })

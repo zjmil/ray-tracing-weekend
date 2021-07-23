@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         Color::zero()
     }
 }
@@ -32,7 +32,7 @@ impl Material for Lambertian {
         }
 
         let scattered = Ray::new(rec.p, scatter_direction, r_in.time);
-        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
+        let attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         Some((attenuation, scattered))
     }
 }
@@ -46,7 +46,7 @@ impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> SharedMaterial {
         Arc::new(Metal {
             albedo,
-            fuzz: clamp(fuzz, fuzz, 1.0),
+            fuzz: fuzz.min(1.0),
         })
     }
 }
@@ -96,7 +96,7 @@ impl Material for Dielectric {
 
         let unit_direction = r_in.direction.normalized();
 
-        let cos_theta = min(dot(&-unit_direction, &rec.normal), 1.0);
+        let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
         let direction = if refraction_ratio * sin_theta > 1.0
@@ -127,7 +127,7 @@ impl Material for DiffuseLight {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
         self.emit.value(u, v, p)
     }
 }

@@ -11,8 +11,6 @@ pub struct BvhNode {
     bbox: AABB;
 }
 
-
-#[inline]
 fn box_compare(a: &SharedHittable, b: &SharedHittable, axis: usize) -> Ordering {
     let a_hit = a.bounding_box(0.0, 0.0);
     let b_hit = b.bounding_box(0.0, 0.0);
@@ -59,16 +57,17 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        if !self.bbox.hit(r, t_min, t_max) {
-            return None;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if self.bbox.hit(r, t_min, t_max) {
+            let left_hit = left.hit(r, t_min, t_max);
+            let right_hit = right.hit(r, t_min, left_hit.map_or(t_max, |r| r.t));
+
+            right_hit.or(left_hit)
+        } else {
+            None
         }
-
-        let left_hit = left.hit(r, t_min, t_max);
-        let right_hit = right.hit(r, t_min, left_hit.map_or(t_max, |r| r.t));
-
-        right_hit.or(left_hit)
     }
+
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {
         Some(self.box)
     }

@@ -26,8 +26,8 @@ impl AABB {
                 swap(&mut t0, &mut t1);
             }
 
-            t_min = max(t0, t_min);
-            t_max = min(t1, t_max);
+            t_min = t0.max(t_min);
+            t_max = t1.min(t_max);
             if t_max <= t_min {
                 return false;
             }
@@ -37,14 +37,12 @@ impl AABB {
     }
 }
 
-#[inline]
 fn vec3_min(u: &Vec3, v: &Vec3) -> Vec3 {
-    Vec3::new(min(u.x, v.x), min(u.y, v.y), min(u.z, v.z))
+    Vec3::new(u.x.min(v.x), u.y.min(v.y), u.z.min(v.z))
 }
 
-#[inline]
 fn vec3_max(u: &Vec3, v: &Vec3) -> Vec3 {
-    Vec3::new(max(u.x, v.x), max(u.y, v.y), max(u.z, v.z))
+    Vec3::new(u.x.max(v.x), u.y.max(v.y), u.z.max(v.z))
 }
 
 pub fn surrounding_box(a: &AABB, b: &AABB) -> AABB {

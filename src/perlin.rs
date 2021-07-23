@@ -30,11 +30,10 @@ impl Perlin {
         }
     }
 
-    pub fn noise(&self, p: Point3) -> f64 {
+    pub fn noise(&self, p: &Point3) -> f64 {
         let parts = p - p.floor();
         // Hermitian Smoothing
-        let parts_smoothed = parts * parts * (Point3::new(3.0, 3.0, 3.0) - 2.0 * parts);
-        let (u, v, w) = parts_smoothed.as_tuple();
+        let parts_smoothed = parts * parts * (Point3::full(3.0) - 2.0 * parts);
 
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
@@ -54,35 +53,11 @@ impl Perlin {
             }
         }
 
-        let p = Vec3::new(u, v, w);
-        Self::perlin_interp(&c, p)
+        Self::perlin_interpolation(&c, &parts_smoothed)
     }
 
-    /*
-    fn trilinear_inerp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
-        let mut acc = 0.0;
-
-        for ii in 0..2 {
-            for ji in 0..2 {
-                for ki in 0..2 {
-                    let i = ii as f64;
-                    let j = ji as f64;
-                    let k = ki as f64;
-
-                    acc += (i * u + (1.0 - i) * (1.0 - u))
-                        * (j * v + (1.0 - j) * (1.0 - v))
-                        * (k * w + (1.0 - k) * (1.0 - w))
-                        * c[ii][ji][ki];
-                }
-            }
-        }
-
-        acc
-    }
-    */
-
-    fn perlin_interp(c: &[[[Vec3; 2]; 2]; 2], p: Vec3) -> f64 {
-        let pp = p * p * (Vec3::new(3.0, 3.0, 3.0) - 2.0 * p);
+    fn perlin_interpolation(c: &[[[Vec3; 2]; 2]; 2], p: &Vec3) -> f64 {
+        let pp = p * p * (Vec3::full(3.0) - 2.0 * p);
         let mut acc = 0.0;
 
         for i in 0..2 {
@@ -100,14 +75,14 @@ impl Perlin {
         acc
     }
 
-    pub fn turbulance(&self, p: Point3) -> f64 {
+    pub fn turbulance(&self, p: &Point3) -> f64 {
         let depth = 7;
-        let mut temp_p = p;
+        let mut temp_p = *p;
         let mut acc = 0.0;
         let mut weight = 1.0;
 
         for _ in 0..depth {
-            acc += weight * self.noise(temp_p);
+            acc += weight * self.noise(&temp_p);
             weight *= 0.5;
             temp_p = 2.0 * temp_p;
         }
