@@ -15,7 +15,7 @@ mod vec3;
 use aarect::Rect2D;
 use camera::Camera;
 use cube::Cube;
-use hittable::{Hittable, SharedHittable};
+use hittable::Hittable;
 use material::*;
 use moving_sphere::MovingSphere;
 use ray::Ray;
@@ -23,6 +23,7 @@ use rayon::prelude::*;
 use sphere::Sphere;
 use std::env;
 use std::iter;
+use std::sync::Arc;
 use texture::*;
 use util::*;
 use vec3::*;
@@ -90,7 +91,7 @@ fn main() {
     let mut samples_per_pixel = 100;
     let max_depth = 50;
 
-    let world: Vec<SharedHittable>;
+    let world: Vec<Arc<dyn Hittable>>;
     let look_from;
     let look_at;
     let vup = Point3::new(0.0, 1.0, 0.0);
@@ -202,8 +203,8 @@ fn main() {
     eprintln!("\nDone. Seconds = {}", total_time.as_secs_f32());
 }
 
-fn random_scene() -> Vec<SharedHittable> {
-    let mut world = Vec::new();
+fn random_scene() -> Vec<Arc<dyn Hittable>> {
+    let mut world: Vec<Arc<dyn Hittable>> = Vec::new();
 
     let checker = Checker::new(
         SolidColor::new(Color::new(0.2, 0.3, 0.1)),
@@ -211,8 +212,8 @@ fn random_scene() -> Vec<SharedHittable> {
     );
 
     let ground_mat = Lambertian::new(checker);
-    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
-    world.push(ground);
+    let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, Arc::new(ground_mat));
+    world.push(Arc::new(ground));
 
     let mut rng = thread_rng();
     for a in -11..11 {
@@ -223,32 +224,26 @@ fn random_scene() -> Vec<SharedHittable> {
             let center = Point3::new(a as Float + xoffset, 0.2, b as Float + zoffset);
 
             if (center - Point3::new(4.0, 0.2, 0.0)).mag() > 0.9 {
-                let sphere_mat: SharedMaterial = if choose_mat < 0.8 {
+                let sphere_mat: Arc<dyn Material> = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    let mat = Lambertian::new(SolidColor::new(albedo));
+                    let mat = Arc::new(Lambertian::new(SolidColor::new(albedo)));
                     let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
-                    world.push(MovingSphere::new(
-                        center,
-                        center2,
-                        0.0,
-                        1.0,
-                        0.2,
-                        mat.clone(),
-                    ));
+                    let sphere = MovingSphere::new(center, center2, 0.0, 1.0, 0.2, mat.clone());
+                    world.push(Arc::new(sphere));
                     mat
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = rng.gen_range(0.0..0.5);
-                    Metal::new(albedo, fuzz)
+                    Arc::new(Metal::new(albedo, fuzz))
                 } else {
                     // glass
-                    Dielectric::new(1.5)
+                    Arc::new(Dielectric::new(1.5))
                 };
 
                 let sphere = Sphere::new(center, 0.2, sphere_mat);
-                world.push(sphere);
+                world.push(Arc::new(sphere));
             }
         }
     }
@@ -256,79 +251,102 @@ fn random_scene() -> Vec<SharedHittable> {
     world
 }
 
-fn two_spheres() -> Vec<SharedHittable> {
+fn two_spheres() -> Vec<Arc<dyn Hittable>> {
     let checker = Checker::new(
         SolidColor::new(Color::new(0.2, 0.3, 0.1)),
         SolidColor::new(Color::new(0.9, 0.9, 0.9)),
     );
 
+    let lambertian = Arc::new(Lambertian::new(checker));
+
     vec![
-        Sphere::new(
+        Arc::new(Sphere::new(
             Point3::new(0.0, -10.0, 0.0),
             10.0,
-            Lambertian::new(checker.clone()),
-        ),
-        Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, Lambertian::new(checker)),
+            lambertian.clone(),
+        )),
+        Arc::new(Sphere::new(Point3::new(0.0, 10.0, 0.0), 10.0, lambertian)),
     ]
 }
 
-fn two_perlin_spheres() -> Vec<SharedHittable> {
+fn two_perlin_spheres() -> Vec<Arc<dyn Hittable>> {
     let noise = Noise::new(4.0);
 
+    let lambertian = Arc::new(Lambertian::new(noise));
     vec![
-        Sphere::new(
+        Arc::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
-            Lambertian::new(noise.clone()),
-        ),
-        Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
+            lambertian.clone(),
+        )),
+        Arc::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, lambertian)),
     ]
 }
 
-fn earth() -> Vec<SharedHittable> {
+fn earth() -> Vec<Arc<dyn Hittable>> {
     let earth_texture = Image::new("./earthmap.jpg");
     let earth_surface = Lambertian::new(earth_texture);
 
-    vec![Sphere::new(Point3::zero(), 2.0, earth_surface)]
+    vec![Arc::new(Sphere::new(
+        Point3::zero(),
+        2.0,
+        Arc::new(earth_surface),
+    ))]
 }
 
-fn simple_light() -> Vec<SharedHittable> {
+fn simple_light() -> Vec<Arc<dyn Hittable>> {
     let noise = Noise::new(4.0);
     let difflight = DiffuseLight::new(SolidColor::new(Color::new(4.0, 4.0, 4.0)));
 
+    let lambertian = Arc::new(Lambertian::new(noise));
     vec![
-        Sphere::new(
+        Arc::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
-            Lambertian::new(noise.clone()),
-        ),
-        Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, Lambertian::new(noise)),
-        Rect2D::new_xy(3.0, 5.0, 1.0, 3.0, -2.0, difflight),
+            lambertian.clone(),
+        )),
+        Arc::new(Sphere::new(Point3::new(0.0, 2.0, 0.0), 2.0, lambertian)),
+        Arc::new(Rect2D::new_xy(
+            3.0,
+            5.0,
+            1.0,
+            3.0,
+            -2.0,
+            Arc::new(difflight),
+        )),
     ]
 }
 
-fn cornell_box() -> Vec<SharedHittable> {
-    let red = Lambertian::new(SolidColor::new(Color::new(0.65, 0.05, 0.05)));
-    let white = Lambertian::new(SolidColor::new(Color::new(0.73, 0.73, 0.73)));
-    let green = Lambertian::new(SolidColor::new(Color::new(0.12, 0.45, 0.15)));
-    let light = DiffuseLight::new(SolidColor::new(Color::new(15.0, 15.0, 15.0)));
+fn cornell_box() -> Vec<Arc<dyn Hittable>> {
+    let red = Arc::new(Lambertian::new(SolidColor::new(Color::new(
+        0.65, 0.05, 0.05,
+    ))));
+    let white = Arc::new(Lambertian::new(SolidColor::new(Color::new(
+        0.73, 0.73, 0.73,
+    ))));
+    let green = Arc::new(Lambertian::new(SolidColor::new(Color::new(
+        0.12, 0.45, 0.15,
+    ))));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new(Color::new(
+        15.0, 15.0, 15.0,
+    ))));
 
     vec![
-        Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 555.0, green),
-        Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 0.0, red),
-        Rect2D::new_xz(213.0, 343.0, 227.0, 332.0, 554.0, light),
-        Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 0.0, white.clone()),
-        Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
-        Rect2D::new_xy(0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
-        Cube::new(
+        Arc::new(Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+        Arc::new(Rect2D::new_yz(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+        Arc::new(Rect2D::new_xz(213.0, 343.0, 227.0, 332.0, 554.0, light)),
+        Arc::new(Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+        Arc::new(Rect2D::new_xz(0.0, 555.0, 0.0, 555.0, 555.0, white.clone())),
+        Arc::new(Rect2D::new_xy(0.0, 555.0, 0.0, 555.0, 555.0, white.clone())),
+        Arc::new(Cube::new(
             Point3::new(130.0, 0.0, 65.0),
             Point3::new(295.0, 165.0, 230.0),
             white.clone(),
-        ),
-        Cube::new(
+        )),
+        Arc::new(Cube::new(
             Point3::new(265.0, 0.0, 295.0),
             Point3::new(430.0, 330.0, 460.0),
-            white.clone(),
-        ),
+            white,
+        )),
     ]
 }

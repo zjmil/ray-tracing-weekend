@@ -1,20 +1,20 @@
 use crate::aabb::{surrounding_box, AABB};
-use crate::material::SharedMaterial;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::util::Point3;
 use crate::util::Time;
 use crate::vec3::Float;
 use crate::vec3::Vec3;
+use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    t: Float,
+    pub t: Float,
     pub u: Float,
     pub v: Float,
     pub front_face: bool,
-    pub material: SharedMaterial,
+    pub material: Arc<dyn Material>,
 }
 
 impl HitRecord {
@@ -25,7 +25,7 @@ impl HitRecord {
         v: Float,
         ray: &Ray,
         outward_normal: &Vec3,
-        material: SharedMaterial,
+        material: Arc<dyn Material>,
     ) -> HitRecord {
         let front_face = ray.direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
@@ -45,25 +45,19 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord>;
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB>;
 }
 
-pub type SharedHittable = Box<dyn Hittable + Send + Sync>;
-
-impl Hittable for Vec<SharedHittable> {
+impl Hittable for Vec<Arc<dyn Hittable>> {
     fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
-        let mut closest_so_far = t_max;
-        let mut rec = None;
-
-        for obj in self.iter() {
-            if let Some(obj_rec) = obj.hit(r, t_min, closest_so_far) {
-                closest_so_far = obj_rec.t;
-                rec = Some(obj_rec.clone());
-            }
-        }
-        rec
+        self.iter()
+            .fold((t_max, None), |(closest_so_far, rec), obj| {
+                obj.hit(r, t_min, closest_so_far)
+                    .map_or((closest_so_far, rec), |obj_rec| (obj_rec.t, Some(obj_rec)))
+            })
+            .1
     }
 
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {

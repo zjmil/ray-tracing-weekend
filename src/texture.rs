@@ -3,21 +3,18 @@ use crate::util::*;
 use crate::vec3::Float;
 use image::io::Reader as ImageReader;
 use image::{Pixel, RgbImage};
-use std::sync::Arc;
 
-pub trait Texture {
+pub trait Texture: Send + Sync {
     fn value(&self, u: Float, v: Float, p: &Point3) -> Color;
 }
-
-pub type SharedTexture = Arc<dyn Texture + Send + Sync>;
 
 pub struct SolidColor {
     color: Color,
 }
 
 impl SolidColor {
-    pub fn new(color: Color) -> SharedTexture {
-        Arc::new(SolidColor { color })
+    pub fn new(color: Color) -> SolidColor {
+        SolidColor { color }
     }
 }
 
@@ -27,22 +24,25 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct Checker {
-    odd: SharedTexture,
-    even: SharedTexture,
+pub struct Checker<Odd: Texture, Even: Texture> {
+    odd: Odd,
+    even: Even,
 }
 
-impl Checker {
-    pub fn new(odd: SharedTexture, even: SharedTexture) -> SharedTexture {
-        Arc::new(Checker { odd, even })
+impl<Odd: Texture, Even: Texture> Checker<Odd, Even> {
+    pub fn new(odd: Odd, even: Even) -> Checker<Odd, Even> {
+        Checker { odd, even }
     }
 }
 
-impl Texture for Checker {
+impl<Odd: Texture, Even: Texture> Texture for Checker<Odd, Even> {
     fn value(&self, u: Float, v: Float, p: &Point3) -> Color {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
-        let texture = if sines < 0.0 { &self.odd } else { &self.even };
-        texture.value(u, v, p)
+        if sines < 0.0 {
+            self.odd.value(u, v, p)
+        } else {
+            self.even.value(u, v, p)
+        }
     }
 }
 
@@ -52,11 +52,11 @@ pub struct Noise {
 }
 
 impl Noise {
-    pub fn new(scale: Float) -> SharedTexture {
-        Arc::new(Noise {
+    pub fn new(scale: Float) -> Noise {
+        Noise {
             noise: Perlin::new(),
             scale,
-        })
+        }
     }
 }
 
@@ -71,13 +71,13 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(filename: &str) -> SharedTexture {
+    pub fn new(filename: &str) -> Image {
         let image = ImageReader::open(filename)
             .unwrap()
             .decode()
             .unwrap()
             .to_rgb8();
-        Arc::new(Image { image })
+        Image { image }
     }
 }
 

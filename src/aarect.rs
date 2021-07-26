@@ -1,17 +1,18 @@
 use crate::aabb::AABB;
-use crate::hittable::{HitRecord, Hittable, SharedHittable};
-use crate::material::SharedMaterial;
+use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::util::Time;
 use crate::vec3::Float;
 use crate::vec3::Vec3;
+use std::sync::Arc;
 
 pub struct Rect2D {
     v0: Vec3,
     v1: Vec3,
     k: Float,
     missing: Missing,
-    material: SharedMaterial,
+    material: Arc<dyn Material>,
 }
 
 enum Missing {
@@ -31,20 +32,14 @@ impl Missing {
 }
 
 impl Rect2D {
-    fn new(
-        v0: Vec3,
-        v1: Vec3,
-        k: Float,
-        missing: Missing,
-        material: SharedMaterial,
-    ) -> SharedHittable {
-        Box::new(Rect2D {
+    fn new(v0: Vec3, v1: Vec3, k: Float, missing: Missing, material: Arc<dyn Material>) -> Rect2D {
+        Rect2D {
             v0,
             v1,
             k,
             missing,
             material,
-        })
+        }
     }
 
     pub fn new_xy(
@@ -53,8 +48,8 @@ impl Rect2D {
         y0: Float,
         y1: Float,
         k: Float,
-        material: SharedMaterial,
-    ) -> SharedHittable {
+        material: Arc<dyn Material>,
+    ) -> Rect2D {
         Self::new(
             Vec3::new(x0, y0, 0.0),
             Vec3::new(x1, y1, 0.0),
@@ -70,8 +65,8 @@ impl Rect2D {
         z0: Float,
         z1: Float,
         k: Float,
-        material: SharedMaterial,
-    ) -> SharedHittable {
+        material: Arc<dyn Material>,
+    ) -> Rect2D {
         Self::new(
             Vec3::new(x0, 0.0, z0),
             Vec3::new(x1, 0.0, z1),
@@ -87,8 +82,8 @@ impl Rect2D {
         z0: Float,
         z1: Float,
         k: Float,
-        material: SharedMaterial,
-    ) -> SharedHittable {
+        material: Arc<dyn Material>,
+    ) -> Rect2D {
         Self::new(
             Vec3::new(0.0, y0, z0),
             Vec3::new(0.0, y1, z1),

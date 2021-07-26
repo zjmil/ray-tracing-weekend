@@ -1,24 +1,25 @@
 use crate::aabb::AABB;
-use crate::hittable::{HitRecord, Hittable, SharedHittable};
-use crate::material::SharedMaterial;
+use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::util::{Point3, Time};
 use crate::vec3::{Float, Vec3};
 use std::f32::consts::{PI, TAU};
+use std::sync::Arc;
 
 pub struct Sphere {
     center: Point3,
     radius: Float,
-    material: SharedMaterial,
+    material: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: Float, material: SharedMaterial) -> SharedHittable {
-        Box::new(Sphere {
+    pub fn new(center: Point3, radius: Float, material: Arc<dyn Material>) -> Sphere {
+        Sphere {
             center,
             radius,
             material,
-        })
+        }
     }
 }
 

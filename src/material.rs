@@ -1,31 +1,28 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::texture::SharedTexture;
+use crate::texture::Texture;
 use crate::util::*;
 use crate::vec3::*;
 use rand::prelude::*;
-use std::sync::Arc;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
     fn emitted(&self, _u: Float, _v: Float, _p: &Point3) -> Color {
         Color::zero()
     }
 }
 
-pub type SharedMaterial = Arc<dyn Material + Sync + Send>;
-
-pub struct Lambertian {
-    albedo: SharedTexture,
+pub struct Lambertian<T: Texture> {
+    albedo: T,
 }
 
-impl Lambertian {
-    pub fn new(albedo: SharedTexture) -> SharedMaterial {
-        Arc::new(Lambertian { albedo })
+impl<T: Texture> Lambertian<T> {
+    pub fn new(albedo: T) -> Lambertian<T> {
+        Lambertian { albedo }
     }
 }
 
-impl Material for Lambertian {
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
         let mut scatter_direction = rec.normal + random_unit_vector();
         if scatter_direction.near_zero() {
@@ -44,11 +41,11 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: Float) -> SharedMaterial {
-        Arc::new(Metal {
+    pub fn new(albedo: Color, fuzz: Float) -> Metal {
+        Metal {
             albedo,
             fuzz: fuzz.min(1.0),
-        })
+        }
     }
 }
 
@@ -74,10 +71,10 @@ pub struct Dielectric {
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: Float) -> SharedMaterial {
-        Arc::new(Dielectric {
+    pub fn new(index_of_refraction: Float) -> Dielectric {
+        Dielectric {
             index_of_refraction,
-        })
+        }
     }
 
     fn reflectance(cosine: Float, ref_idx: Float) -> Float {
@@ -113,17 +110,17 @@ impl Material for Dielectric {
     }
 }
 
-pub struct DiffuseLight {
-    emit: SharedTexture,
+pub struct DiffuseLight<T: Texture> {
+    emit: T,
 }
 
-impl DiffuseLight {
-    pub fn new(emit: SharedTexture) -> SharedMaterial {
-        Arc::new(DiffuseLight { emit })
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(emit: T) -> DiffuseLight<T> {
+        DiffuseLight { emit }
     }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(&self, _: &Ray, _: &HitRecord) -> Option<(Color, Ray)> {
         None
     }

@@ -1,10 +1,11 @@
 use crate::aabb::{surrounding_box, AABB};
-use crate::hittable::{HitRecord, Hittable, SharedHittable};
-use crate::material::SharedMaterial;
+use crate::hittable::{HitRecord, Hittable};
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::util::*;
 use crate::vec3::*;
 use std::f32::consts::PI;
+use std::sync::Arc;
 
 pub struct MovingSphere {
     center0: Point3,
@@ -12,7 +13,7 @@ pub struct MovingSphere {
     time0: Time,
     time1: Time,
     radius: Float,
-    material: SharedMaterial,
+    material: Arc<dyn Material>,
 }
 
 impl MovingSphere {
@@ -22,16 +23,16 @@ impl MovingSphere {
         time0: Time,
         time1: Time,
         radius: Float,
-        material: SharedMaterial,
-    ) -> SharedHittable {
-        Box::new(MovingSphere {
+        material: Arc<dyn Material>,
+    ) -> MovingSphere {
+        MovingSphere {
             center0,
             center1,
             time0,
             time1,
             radius,
             material,
-        })
+        }
     }
 
     pub fn center(&self, time: Time) -> Point3 {
