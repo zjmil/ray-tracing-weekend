@@ -1,5 +1,6 @@
 use crate::ray::Ray;
 use crate::util::*;
+use crate::vec3::Float;
 use crate::vec3::Vec3;
 use std::mem::swap;
 
@@ -13,21 +14,21 @@ impl AABB {
         AABB { min, max }
     }
 
-    pub fn hit(&self, r: &Ray, t_min_init: f64, t_max_init: f64) -> bool {
+    pub fn hit(&self, r: &Ray, t_min_init: Float, t_max_init: Float) -> bool {
         let mut t_min = t_min_init;
         let mut t_max = t_max_init;
 
-        for a in 0..3 {
-            let inv_d = 1.0 / r.direction[a];
-            let mut t0 = (self.min[a] - r.origin[a]) * inv_d;
-            let mut t1 = (self.max[a] - r.origin[a]) * inv_d;
+        let inv_d = Vec3::one() / r.direction;
+        let mut t0 = (self.min - r.origin) * inv_d;
+        let mut t1 = (self.max - r.origin) * inv_d;
 
-            if inv_d < 0.0 {
-                swap(&mut t0, &mut t1);
+        for a in 0..3 {
+            if inv_d[a] < 0.0 {
+                swap(&mut t0[a], &mut t1[a]);
             }
 
-            t_min = t0.max(t_min);
-            t_max = t1.min(t_max);
+            t_min = t0[a].max(t_min);
+            t_max = t1[a].min(t_max);
             if t_max <= t_min {
                 return false;
             }

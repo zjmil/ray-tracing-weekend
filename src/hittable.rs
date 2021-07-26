@@ -3,15 +3,16 @@ use crate::material::SharedMaterial;
 use crate::ray::Ray;
 use crate::util::Point3;
 use crate::util::Time;
-use crate::vec3::{dot, Vec3};
+use crate::vec3::Float;
+use crate::vec3::Vec3;
 
 #[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    t: f64,
-    pub u: f64,
-    pub v: f64,
+    t: Float,
+    pub u: Float,
+    pub v: Float,
     pub front_face: bool,
     pub material: SharedMaterial,
 }
@@ -19,14 +20,14 @@ pub struct HitRecord {
 impl HitRecord {
     pub fn new(
         p: Point3,
-        t: f64,
-        u: f64,
-        v: f64,
+        t: Float,
+        u: Float,
+        v: Float,
         ray: &Ray,
         outward_normal: &Vec3,
         material: SharedMaterial,
     ) -> HitRecord {
-        let front_face = dot(&ray.direction, outward_normal) < 0.0;
+        let front_face = ray.direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             *outward_normal
         } else {
@@ -45,14 +46,14 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord>;
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB>;
 }
 
 pub type SharedHittable = Box<dyn Hittable + Send + Sync>;
 
 impl Hittable for Vec<SharedHittable> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut rec = None;
 

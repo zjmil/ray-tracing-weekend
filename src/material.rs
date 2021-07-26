@@ -3,11 +3,12 @@ use crate::ray::Ray;
 use crate::texture::SharedTexture;
 use crate::util::*;
 use crate::vec3::*;
+use rand::prelude::*;
 use std::sync::Arc;
 
 pub trait Material {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;
-    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+    fn emitted(&self, _u: Float, _v: Float, _p: &Point3) -> Color {
         Color::zero()
     }
 }
@@ -39,11 +40,11 @@ impl Material for Lambertian {
 
 pub struct Metal {
     albedo: Color,
-    fuzz: f64,
+    fuzz: Float,
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f64) -> SharedMaterial {
+    pub fn new(albedo: Color, fuzz: Float) -> SharedMaterial {
         Arc::new(Metal {
             albedo,
             fuzz: fuzz.min(1.0),
@@ -53,14 +54,14 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected = reflect(&r_in.direction.normalized(), &rec.normal);
+        let reflected = r_in.direction.normalized().reflect(&rec.normal);
         let scattered = Ray::new(
             rec.p,
             reflected + self.fuzz * random_in_unit_sphere(),
             r_in.time,
         );
 
-        if dot(&scattered.direction, &rec.normal) > 0.0 {
+        if scattered.direction.dot(&rec.normal) > 0.0 {
             Some((self.albedo, scattered))
         } else {
             None
@@ -69,17 +70,17 @@ impl Material for Metal {
 }
 
 pub struct Dielectric {
-    index_of_refraction: f64,
+    index_of_refraction: Float,
 }
 
 impl Dielectric {
-    pub fn new(index_of_refraction: f64) -> SharedMaterial {
+    pub fn new(index_of_refraction: Float) -> SharedMaterial {
         Arc::new(Dielectric {
             index_of_refraction,
         })
     }
 
-    fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+    fn reflectance(cosine: Float, ref_idx: Float) -> Float {
         // Use Schlick's approximation for reflectance.
         let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
@@ -96,13 +97,13 @@ impl Material for Dielectric {
 
         let unit_direction = r_in.direction.normalized();
 
-        let cos_theta = dot(&-unit_direction, &rec.normal).min(1.0);
+        let cos_theta = (-unit_direction).dot(&rec.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta.powi(2)).sqrt();
 
         let direction = if refraction_ratio * sin_theta > 1.0
-            || Dielectric::reflectance(cos_theta, refraction_ratio) > rand()
+            || Dielectric::reflectance(cos_theta, refraction_ratio) > thread_rng().gen()
         {
-            reflect(&unit_direction, &rec.normal)
+            unit_direction.reflect(&rec.normal)
         } else {
             refract(&unit_direction, &rec.normal, refraction_ratio)
         };
@@ -127,7 +128,7 @@ impl Material for DiffuseLight {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn emitted(&self, u: Float, v: Float, p: &Point3) -> Color {
         self.emit.value(u, v, p)
     }
 }

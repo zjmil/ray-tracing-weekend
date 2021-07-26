@@ -1,6 +1,7 @@
 use crate::ray::Ray;
-use crate::util::{rand_range, Point3, Time};
+use crate::util::{Point3, Time};
 use crate::vec3::*;
+use rand::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {
@@ -11,7 +12,7 @@ pub struct Camera {
     w: Vec3,
     u: Vec3,
     v: Vec3,
-    lens_radius: f64,
+    lens_radius: Float,
     time0: Time,
     time1: Time,
 }
@@ -21,10 +22,10 @@ impl Camera {
         look_from: &Point3,
         look_at: &Point3,
         vup: &Vec3,
-        vfov: f64,
-        aspect_ratio: f64,
-        aperture: f64,
-        focus_dist: f64,
+        vfov: Float,
+        aspect_ratio: Float,
+        aperture: Float,
+        focus_dist: Float,
         time0: Time,
         time1: Time,
     ) -> Camera {
@@ -34,8 +35,8 @@ impl Camera {
         let viewport_width = aspect_ratio * viewport_height;
 
         let w = (look_from - look_at).normalized();
-        let u = cross(&vup, &w).normalized();
-        let v = cross(&w, &u);
+        let u = vup.cross(&w).normalized();
+        let v = w.cross(&u);
 
         let origin = *look_from;
         let horizontal = focus_dist * viewport_width * u;
@@ -57,13 +58,13 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+    pub fn get_ray(&self, s: Float, t: Float) -> Ray {
         let rd = self.lens_radius * random_in_unit_disk();
         let offset = self.u * rd.x + self.v * rd.y;
-        Ray::new(
-            self.origin + offset,
-            self.lower_left + s * self.horizontal + t * self.vertical - self.origin - offset,
-            rand_range(self.time0, self.time1),
-        )
+
+        let origin = self.origin + offset;
+        let direction = self.lower_left + s * self.horizontal + t * self.vertical - origin;
+        let time = thread_rng().gen_range(self.time0..self.time1);
+        Ray::new(origin, direction, time)
     }
 }

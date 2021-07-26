@@ -4,6 +4,7 @@ use crate::hittable::{HitRecord, Hittable, SharedHittable};
 use crate::material::SharedMaterial;
 use crate::ray::Ray;
 use crate::util::{Point3, Time};
+use crate::vec3::Float;
 
 pub struct Cube {
     min: Point3,
@@ -27,7 +28,7 @@ impl Cube {
 }
 
 impl Hittable for Cube {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
         self.sides.hit(r, t_min, t_max)
     }
 

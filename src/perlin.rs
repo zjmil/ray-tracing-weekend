@@ -30,7 +30,7 @@ impl Perlin {
         }
     }
 
-    pub fn noise(&self, p: &Point3) -> f64 {
+    pub fn noise(&self, p: &Point3) -> Float {
         let parts = p - p.floor();
         // Hermitian Smoothing
         let parts_smoothed = parts * parts * (Point3::full(3.0) - 2.0 * parts);
@@ -56,18 +56,18 @@ impl Perlin {
         Self::perlin_interpolation(&c, &parts_smoothed)
     }
 
-    fn perlin_interpolation(c: &[[[Vec3; 2]; 2]; 2], p: &Vec3) -> f64 {
+    fn perlin_interpolation(c: &[[[Vec3; 2]; 2]; 2], p: &Vec3) -> Float {
         let pp = p * p * (Vec3::full(3.0) - 2.0 * p);
         let mut acc = 0.0;
 
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let ijk = Vec3::new(i as f64, j as f64, k as f64);
+                    let ijk = Vec3::new(i as Float, j as Float, k as Float);
 
                     let weight_v = p - ijk;
                     acc += (ijk * pp + (Vec3::one() - ijk) * (Vec3::one() - pp)).product()
-                        * dot(&c[i][j][k], &weight_v);
+                        * c[i][j][k].dot(&weight_v);
                 }
             }
         }
@@ -75,7 +75,7 @@ impl Perlin {
         acc
     }
 
-    pub fn turbulance(&self, p: &Point3) -> f64 {
+    pub fn turbulence(&self, p: &Point3) -> Float {
         let depth = 7;
         let mut temp_p = *p;
         let mut acc = 0.0;

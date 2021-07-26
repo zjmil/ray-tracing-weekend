@@ -3,12 +3,13 @@ use crate::hittable::{HitRecord, Hittable, SharedHittable};
 use crate::material::SharedMaterial;
 use crate::ray::Ray;
 use crate::util::Time;
+use crate::vec3::Float;
 use crate::vec3::Vec3;
 
 pub struct Rect2D {
     v0: Vec3,
     v1: Vec3,
-    k: f64,
+    k: Float,
     missing: Missing,
     material: SharedMaterial,
 }
@@ -33,7 +34,7 @@ impl Rect2D {
     fn new(
         v0: Vec3,
         v1: Vec3,
-        k: f64,
+        k: Float,
         missing: Missing,
         material: SharedMaterial,
     ) -> SharedHittable {
@@ -47,11 +48,11 @@ impl Rect2D {
     }
 
     pub fn new_xy(
-        x0: f64,
-        x1: f64,
-        y0: f64,
-        y1: f64,
-        k: f64,
+        x0: Float,
+        x1: Float,
+        y0: Float,
+        y1: Float,
+        k: Float,
         material: SharedMaterial,
     ) -> SharedHittable {
         Self::new(
@@ -64,11 +65,11 @@ impl Rect2D {
     }
 
     pub fn new_xz(
-        x0: f64,
-        x1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        x0: Float,
+        x1: Float,
+        z0: Float,
+        z1: Float,
+        k: Float,
         material: SharedMaterial,
     ) -> SharedHittable {
         Self::new(
@@ -81,11 +82,11 @@ impl Rect2D {
     }
 
     pub fn new_yz(
-        y0: f64,
-        y1: f64,
-        z0: f64,
-        z1: f64,
-        k: f64,
+        y0: Float,
+        y1: Float,
+        z0: Float,
+        z1: Float,
+        k: Float,
         material: SharedMaterial,
     ) -> SharedHittable {
         Self::new(
@@ -99,7 +100,7 @@ impl Rect2D {
 }
 
 impl Hittable for Rect2D {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
         // TODO: refactor
         let (t, u, v, outward_normal) = match self.missing {
             Missing::Z => {

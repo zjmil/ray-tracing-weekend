@@ -1,11 +1,12 @@
 use crate::perlin::Perlin;
 use crate::util::*;
+use crate::vec3::Float;
 use image::io::Reader as ImageReader;
 use image::{Pixel, RgbImage};
 use std::sync::Arc;
 
 pub trait Texture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
+    fn value(&self, u: Float, v: Float, p: &Point3) -> Color;
 }
 
 pub type SharedTexture = Arc<dyn Texture + Send + Sync>;
@@ -21,7 +22,7 @@ impl SolidColor {
 }
 
 impl Texture for SolidColor {
-    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+    fn value(&self, _u: Float, _v: Float, _p: &Point3) -> Color {
         self.color
     }
 }
@@ -38,7 +39,7 @@ impl Checker {
 }
 
 impl Texture for Checker {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
+    fn value(&self, u: Float, v: Float, p: &Point3) -> Color {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
         let texture = if sines < 0.0 { &self.odd } else { &self.even };
         texture.value(u, v, p)
@@ -47,11 +48,11 @@ impl Texture for Checker {
 
 pub struct Noise {
     noise: Perlin,
-    scale: f64,
+    scale: Float,
 }
 
 impl Noise {
-    pub fn new(scale: f64) -> SharedTexture {
+    pub fn new(scale: Float) -> SharedTexture {
         Arc::new(Noise {
             noise: Perlin::new(),
             scale,
@@ -60,8 +61,8 @@ impl Noise {
 }
 
 impl Texture for Noise {
-    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
-        Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.turbulance(p)).sin())
+    fn value(&self, _u: Float, _v: Float, p: &Point3) -> Color {
+        Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.turbulence(p)).sin())
     }
 }
 
@@ -81,21 +82,17 @@ impl Image {
 }
 
 impl Texture for Image {
-    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+    fn value(&self, u: Float, v: Float, _p: &Point3) -> Color {
         let un = u.clamp(0.0, 1.0);
         let vn = 1.0 - v.clamp(0.0, 1.0);
 
         // Clamp coordinates
-        let i = ((un * self.image.width() as f64) as u32).max(self.image.width() - 1);
-        let j = ((vn * self.image.height() as f64) as u32).max(self.image.height() - 1);
+        let i = ((un * self.image.width() as Float) as u32).max(self.image.width() - 1);
+        let j = ((vn * self.image.height() as Float) as u32).max(self.image.height() - 1);
 
-        let color_scale = 1.0 / 255.0;
         let pixel = self.image.get_pixel(i, j).to_rgb();
+        let float_channels: Vec<_> = pixel.channels().iter().map(|x| *x as Float).collect();
 
-        Color::new(
-            pixel[0] as f64 * color_scale,
-            pixel[1] as f64 * color_scale,
-            pixel[2] as f64 * color_scale,
-        )
+        Color::from_slice(&float_channels) / 255.0
     }
 }

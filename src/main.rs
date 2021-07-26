@@ -27,12 +27,14 @@ use texture::*;
 use util::*;
 use vec3::*;
 
-use std::f64::INFINITY;
+use rand::prelude::*;
+
+use std::f32::INFINITY;
 use std::time::SystemTime;
 
 fn write_color(color: &Color, samples_per_pixel: i32) {
     // Divide the color by the number of samples and gamma-correct for gamma=2.0
-    let scale = 1.0 / (samples_per_pixel as f64);
+    let scale = 1.0 / (samples_per_pixel as Float);
     let sc = (scale * color).sqrt();
     let (fr, fg, fb) = (256.0 * sc.clamp(0.0, 0.999)).as_tuple();
     let (r, g, b) = (fr as i32, fg as i32, fb as i32);
@@ -93,7 +95,7 @@ fn main() {
     let look_at;
     let vup = Point3::new(0.0, 1.0, 0.0);
     let vfov;
-    let mut aperture = 0.0;
+    let aperture;
     let background;
 
     match args.scene {
@@ -111,6 +113,7 @@ fn main() {
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
+            aperture = 0.0;
         }
         3 => {
             world = two_perlin_spheres();
@@ -118,6 +121,7 @@ fn main() {
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
+            aperture = 0.0;
         }
         4 => {
             world = earth();
@@ -125,6 +129,7 @@ fn main() {
             look_from = Point3::new(13.0, 2.0, 3.0);
             look_at = Point3::zero();
             vfov = 20.0;
+            aperture = 0.0;
         }
         5 => {
             world = simple_light();
@@ -133,6 +138,7 @@ fn main() {
             look_from = Point3::new(26.0, 3.0, 6.0);
             look_at = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
+            aperture = 0.0;
         }
         6 | _ => {
             world = cornell_box();
@@ -143,10 +149,11 @@ fn main() {
             look_from = Point3::new(278.0, 278.0, -800.0);
             look_at = Point3::new(278.0, 278.0, 0.0);
             vfov = 40.0;
+            aperture = 0.0;
         }
     }
 
-    let image_height = (image_width as f64 / aspect_ratio) as i32;
+    let image_height = (image_width as Float / aspect_ratio) as i32;
 
     // Camera
     let dist_to_focus = 10.0;
@@ -170,10 +177,11 @@ fn main() {
         .enumerate()
         .par_bridge()
         .map(|(n, (i, j))| {
+            let mut rng = thread_rng();
             let mut color = Color::zero();
             for _ in 0..samples_per_pixel {
-                let u = (i as f64 + rand()) / (image_width - 1) as f64;
-                let v = (j as f64 + rand()) / (image_height - 1) as f64;
+                let u = (i as Float + rng.gen::<Float>()) / (image_width - 1) as Float;
+                let v = (j as Float + rng.gen::<Float>()) / (image_height - 1) as Float;
 
                 let r = camera.get_ray(u, v);
                 color += ray_color(&r, &background, &world, max_depth);
@@ -206,17 +214,20 @@ fn random_scene() -> Vec<SharedHittable> {
     let ground = Sphere::new(Point3::new(0.0, -1000.0, 0.0), 1000.0, ground_mat);
     world.push(ground);
 
+    let mut rng = thread_rng();
     for a in -11..11 {
         for b in -11..11 {
-            let choose_mat = rand();
-            let center = Point3::new(a as f64 + 0.9 * rand(), 0.2, b as f64 + 0.9 * rand());
+            let choose_mat: Float = rng.gen();
+            let xoffset: Float = 0.9 * rng.gen::<Float>();
+            let zoffset: Float = 0.9 * rng.gen::<Float>();
+            let center = Point3::new(a as Float + xoffset, 0.2, b as Float + zoffset);
 
             if (center - Point3::new(4.0, 0.2, 0.0)).mag() > 0.9 {
                 let sphere_mat: SharedMaterial = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     let mat = Lambertian::new(SolidColor::new(albedo));
-                    let center2 = center + Vec3::new(0.0, rand_range(0.0, 0.5), 0.0);
+                    let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
                     world.push(MovingSphere::new(
                         center,
                         center2,
@@ -229,7 +240,7 @@ fn random_scene() -> Vec<SharedHittable> {
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
-                    let fuzz = rand_range(0.0, 0.5);
+                    let fuzz = rng.gen_range(0.0..0.5);
                     Metal::new(albedo, fuzz)
                 } else {
                     // glass

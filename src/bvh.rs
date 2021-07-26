@@ -31,13 +31,11 @@ impl BvhNode {
     pub fn from_objects(t0: Time, t1: Time, objects: &[SharedHittable]) -> BvhNode {
         let axis = thread_rng().gen_range(0, 3);
 
-        let comparator = |a, b| box_compare(a, b, axis);
-
         let (left, right) = if objects.len() == 1 {
             (objects[0], objects[0])
         } else {
             let mut v = Vec::clone_from_slice(objects);
-            v.sort_by(comparator);
+            v.sort_by(|a, b| box_compare(a, b, axis));
             let mid = objects.len() / 2;
 
             (objects[..mid], objects[mid..])

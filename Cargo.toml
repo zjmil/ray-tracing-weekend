@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 rand = "0.8.4"
-rayon = "1.5"
+rayon = "1.5.1"
 image = "0.23.14"
 
 [profile.release]

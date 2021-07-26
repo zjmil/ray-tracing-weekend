@@ -4,14 +4,14 @@ use crate::material::SharedMaterial;
 use crate::ray::Ray;
 use crate::util::*;
 use crate::vec3::*;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 
 pub struct MovingSphere {
     center0: Point3,
     center1: Point3,
     time0: Time,
     time1: Time,
-    radius: f64,
+    radius: Float,
     material: SharedMaterial,
 }
 
@@ -21,7 +21,7 @@ impl MovingSphere {
         center1: Point3,
         time0: Time,
         time1: Time,
-        radius: f64,
+        radius: Float,
         material: SharedMaterial,
     ) -> SharedHittable {
         Box::new(MovingSphere {
@@ -41,7 +41,7 @@ impl MovingSphere {
 }
 
 // TODO: remove copy
-fn get_sphere_uv(p: &Point3) -> (f64, f64) {
+fn get_sphere_uv(p: &Point3) -> (Float, Float) {
     // p: a given point on the sphere of radius one, centered at the origin.
     // u: returned value [0,1] of angle around the Y axis from X=-1.
     // v: returned value [0,1] of angle from Y=-1 to Y=+1.
@@ -60,7 +60,7 @@ impl Hittable for MovingSphere {
     fn hit(&self, r: &Ray, t_min: Time, t_max: Time) -> Option<HitRecord> {
         let oc = r.origin - self.center(r.time);
         let a = r.direction.mag_squared();
-        let half_b = dot(&oc, &r.direction);
+        let half_b = oc.dot(&r.direction);
         let c = oc.mag_squared() - self.radius.powi(2);
 
         let discriminant = half_b.powi(2) - a * c;
@@ -93,11 +93,11 @@ impl Hittable for MovingSphere {
     }
 
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {
-        let rvec = Vec3::full(self.radius);
+        let rad_vec = Vec3::full(self.radius);
         let ct0 = self.center(t0);
         let ct1 = self.center(t1);
-        let box0 = AABB::new(ct0 - rvec, ct0 + rvec);
-        let box1 = AABB::new(ct1 - rvec, ct1 + rvec);
+        let box0 = AABB::new(ct0 - rad_vec, ct0 + rad_vec);
+        let box1 = AABB::new(ct1 - rad_vec, ct1 + rad_vec);
 
         Some(surrounding_box(&box0, &box1))
     }
