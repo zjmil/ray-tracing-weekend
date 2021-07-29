@@ -1,36 +1,20 @@
-mod aabb;
-mod aarect;
-mod camera;
-mod cube;
-mod hittable;
-mod material;
-mod moving_sphere;
-mod perlin;
-mod ray;
-mod sphere;
-mod texture;
-mod util;
-mod vec3;
-
-use aarect::Rect2D;
-use camera::Camera;
-use cube::Cube;
-use hittable::Hittable;
-use material::*;
-use moving_sphere::MovingSphere;
-use ray::Ray;
+use rand::prelude::*;
 use rayon::prelude::*;
-use sphere::Sphere;
+use rtw::aarect::Rect2D;
+use rtw::camera::Camera;
+use rtw::cube::Cube;
+use rtw::hittable::Hittable;
+use rtw::material::*;
+use rtw::moving_sphere::MovingSphere;
+use rtw::ray::Ray;
+use rtw::sphere::Sphere;
+use rtw::texture::*;
+use rtw::util::*;
+use rtw::vec3::*;
 use std::env;
+use std::f32::INFINITY;
 use std::iter;
 use std::sync::Arc;
-use texture::*;
-use util::*;
-use vec3::*;
-
-use rand::prelude::*;
-
-use std::f32::INFINITY;
 use std::time::SystemTime;
 
 fn write_color(color: &Color, samples_per_pixel: i32) {
@@ -43,20 +27,21 @@ fn write_color(color: &Color, samples_per_pixel: i32) {
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(r: &Ray, background: &Color, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(ray: &Ray, background: &Color, world: &dyn Hittable, depth: i32) -> Color {
     // base case for ray bounce limit
     if depth <= 0 {
         return Color::zero();
     }
 
-    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted = rec.material.emitted(rec.u, rec.v, &rec.p);
-
-        if let Some((attenuation, scattered)) = rec.material.scatter(&r, &rec) {
-            emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+    if let Some(rec) = world.hit(ray, 0.001, INFINITY) {
+        let offset = if let Some((attenuation, scattered)) = rec.material.scatter(ray, &rec) {
+            attenuation * ray_color(&scattered, background, world, depth - 1)
         } else {
-            emitted
-        }
+            Color::zero()
+        };
+
+        let emitted = rec.material.emitted(rec.u, rec.v, &rec.p);
+        emitted + offset
     } else {
         *background
     }
@@ -89,7 +74,7 @@ fn main() {
     let mut aspect_ratio = 16.0 / 9.0;
     let mut image_width = 400;
     let mut samples_per_pixel = 100;
-    let max_depth = 50;
+    let max_depth = 25;
 
     let world: Vec<Arc<dyn Hittable>>;
     let look_from;
@@ -216,8 +201,11 @@ fn random_scene() -> Vec<Arc<dyn Hittable>> {
     world.push(Arc::new(ground));
 
     let mut rng = thread_rng();
-    for a in -11..11 {
-        for b in -11..11 {
+
+    let n = 5;
+
+    for a in -n..n {
+        for b in -n..n {
             let choose_mat: Float = rng.gen();
             let xoffset: Float = 0.9 * rng.gen::<Float>();
             let zoffset: Float = 0.9 * rng.gen::<Float>();

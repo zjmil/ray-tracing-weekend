@@ -26,7 +26,7 @@ impl HitRecord {
         ray: &Ray,
         outward_normal: &Vec3,
         material: Arc<dyn Material>,
-    ) -> HitRecord {
+    ) -> Self {
         let front_face = ray.direction.dot(outward_normal) < 0.0;
         let normal = if front_face {
             *outward_normal

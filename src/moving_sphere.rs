@@ -24,7 +24,7 @@ impl MovingSphere {
         time1: Time,
         radius: Float,
         material: Arc<dyn Material>,
-    ) -> MovingSphere {
+    ) -> Self {
         MovingSphere {
             center0,
             center1,

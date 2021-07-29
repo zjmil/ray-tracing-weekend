@@ -167,33 +167,39 @@ impl IndexMut<usize> for Vec3 {
     }
 }
 
+impl Default for Vec3 {
+    fn default() -> Self {
+        Self::zero()
+    }
+}
+
 impl Vec3 {
-    pub fn new(x: Float, y: Float, z: Float) -> Vec3 {
-        Vec3 { x, y, z }
+    pub fn new(x: Float, y: Float, z: Float) -> Self {
+        Self { x, y, z }
     }
 
-    pub fn from_slice(slice: &[Float]) -> Vec3 {
+    pub fn from_slice(slice: &[Float]) -> Self {
         Self::new(slice[0], slice[1], slice[2])
     }
 
-    pub fn zero() -> Vec3 {
+    pub fn zero() -> Self {
         Self::full(0.0)
     }
 
-    pub fn one() -> Vec3 {
+    pub fn one() -> Self {
         Self::full(1.0)
     }
 
-    pub fn full(a: Float) -> Vec3 {
+    pub fn full(a: Float) -> Self {
         Self::new(a, a, a)
     }
 
-    pub fn random() -> Vec3 {
+    pub fn random() -> Self {
         let mut rng = thread_rng();
         Self::new(rng.gen(), rng.gen(), rng.gen())
     }
 
-    pub fn random_range(min: Float, max: Float) -> Vec3 {
+    pub fn random_range(min: Float, max: Float) -> Self {
         let mut rng = thread_rng();
         Self::new(
             rng.gen_range(min..max),
@@ -240,11 +246,11 @@ impl Vec3 {
     }
 
     pub fn sqrt(&self) -> Vec3 {
-        Vec3::new(self.x.sqrt(), self.y.sqrt(), self.z.sqrt())
+        Self::new(self.x.sqrt(), self.y.sqrt(), self.z.sqrt())
     }
 
     pub fn clamp(&self, min: Float, max: Float) -> Vec3 {
-        Vec3::new(
+        Self::new(
             self.x.clamp(min, max),
             self.y.clamp(min, max),
             self.z.clamp(min, max),
@@ -256,7 +262,7 @@ impl Vec3 {
     }
 
     pub fn cross(&self, other: &Vec3) -> Vec3 {
-        Vec3::new(
+        Self::new(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,

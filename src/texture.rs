@@ -13,7 +13,7 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
-    pub fn new(color: Color) -> SolidColor {
+    pub fn new(color: Color) -> Self {
         SolidColor { color }
     }
 }
@@ -30,7 +30,7 @@ pub struct Checker<Odd: Texture, Even: Texture> {
 }
 
 impl<Odd: Texture, Even: Texture> Checker<Odd, Even> {
-    pub fn new(odd: Odd, even: Even) -> Checker<Odd, Even> {
+    pub fn new(odd: Odd, even: Even) -> Self {
         Checker { odd, even }
     }
 }
@@ -52,7 +52,7 @@ pub struct Noise {
 }
 
 impl Noise {
-    pub fn new(scale: Float) -> Noise {
+    pub fn new(scale: Float) -> Self {
         Noise {
             noise: Perlin::new(),
             scale,
@@ -62,7 +62,7 @@ impl Noise {
 
 impl Texture for Noise {
     fn value(&self, _u: Float, _v: Float, p: &Point3) -> Color {
-        Color::one() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.turbulence(p)).sin())
+        Color::full(0.5) * (1.0 + (self.scale * p.z + 10.0 * self.noise.turbulence(p)).sin())
     }
 }
 
@@ -71,7 +71,7 @@ pub struct Image {
 }
 
 impl Image {
-    pub fn new(filename: &str) -> Image {
+    pub fn new(filename: &str) -> Self {
         let image = ImageReader::open(filename)
             .unwrap()
             .decode()
