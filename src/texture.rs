@@ -1,8 +1,8 @@
-use crate::perlin::Perlin;
-use crate::util::*;
-use crate::vec3::Float;
 use image::io::Reader as ImageReader;
 use image::{Pixel, RgbImage};
+
+use crate::perlin::Perlin;
+use crate::vec3::*;
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: Float, v: Float, p: &Point3) -> Color;

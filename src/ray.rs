@@ -1,5 +1,4 @@
-use crate::util::{Point3, Time};
-use crate::vec3::{Float, Vec3};
+use crate::vec3::*;
 
 #[derive(Clone, Copy)]
 pub struct Ray {

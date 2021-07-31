@@ -1,11 +1,9 @@
+use std::sync::Arc;
+
 use crate::aabb::{surrounding_box, AABB};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::util::Point3;
-use crate::util::Time;
-use crate::vec3::Float;
-use crate::vec3::Vec3;
-use std::sync::Arc;
+use crate::vec3::*;
 
 pub struct HitRecord {
     pub p: Point3,

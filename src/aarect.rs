@@ -1,11 +1,10 @@
+use std::sync::Arc;
+
 use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::util::Time;
-use crate::vec3::Float;
-use crate::vec3::Vec3;
-use std::sync::Arc;
+use crate::vec3::*;
 
 pub struct Rect2D {
     v0: Vec3,

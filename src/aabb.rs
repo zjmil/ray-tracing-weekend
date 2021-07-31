@@ -1,8 +1,7 @@
-use crate::ray::Ray;
-use crate::util::*;
-use crate::vec3::Float;
-use crate::vec3::Vec3;
 use std::mem::swap;
+
+use crate::ray::Ray;
+use crate::vec3::*;
 
 pub struct AABB {
     pub min: Point3,

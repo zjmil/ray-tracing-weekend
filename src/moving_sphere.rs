@@ -1,11 +1,10 @@
+use std::sync::Arc;
+
 use crate::aabb::{surrounding_box, AABB};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::util::*;
 use crate::vec3::*;
-use std::f32::consts::PI;
-use std::sync::Arc;
 
 pub struct MovingSphere {
     center0: Point3,
@@ -41,7 +40,6 @@ impl MovingSphere {
     }
 }
 
-// TODO: remove copy
 fn get_sphere_uv(p: &Point3) -> (Float, Float) {
     // p: a given point on the sphere of radius one, centered at the origin.
     // u: returned value [0,1] of angle around the Y axis from X=-1.
@@ -50,10 +48,10 @@ fn get_sphere_uv(p: &Point3) -> (Float, Float) {
     //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
     //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
     let theta = (-p.y).acos();
-    let phi = (-p.z).atan2(-p.x) + PI;
+    let phi = (-p.z).atan2(-p.x) + FLOAT_PI;
 
-    let u = phi / (2.0 * PI);
-    let v = theta / PI;
+    let u = phi / (2.0 * FLOAT_PI);
+    let v = theta / FLOAT_PI;
     (u, v)
 }
 

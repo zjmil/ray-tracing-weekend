@@ -1,11 +1,11 @@
+use std::sync::Arc;
+
 use crate::aabb::AABB;
 use crate::aarect::Rect2D;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::util::{Point3, Time};
-use crate::vec3::Float;
-use std::sync::Arc;
+use crate::vec3::*;
 
 pub struct Cube {
     min: Point3,

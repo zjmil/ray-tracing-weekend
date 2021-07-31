@@ -1,9 +1,9 @@
+use rand::prelude::*;
+
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::texture::Texture;
-use crate::util::*;
 use crate::vec3::*;
-use rand::prelude::*;
 
 pub trait Material: Send + Sync {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)>;

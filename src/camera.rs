@@ -1,7 +1,7 @@
-use crate::ray::Ray;
-use crate::util::{Point3, Time};
-use crate::vec3::*;
 use rand::prelude::*;
+
+use crate::ray::Ray;
+use crate::vec3::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Camera {

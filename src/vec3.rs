@@ -1,7 +1,16 @@
-use rand::prelude::*;
+use std::f32::consts::PI;
+use std::f32::INFINITY;
 use std::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, Neg, Sub};
 
+use rand::prelude::*;
+
 pub type Float = f32;
+pub const FLOAT_INF: Float = INFINITY;
+pub const FLOAT_PI: Float = PI;
+
+pub type Point3 = Vec3;
+pub type Color = Vec3;
+pub type Time = Float;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {

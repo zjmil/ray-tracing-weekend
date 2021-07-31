@@ -1,5 +1,11 @@
+use std::env;
+use std::iter;
+use std::sync::Arc;
+use std::time::SystemTime;
+
 use rand::prelude::*;
 use rayon::prelude::*;
+
 use rtw::aarect::Rect2D;
 use rtw::camera::Camera;
 use rtw::cube::Cube;
@@ -9,13 +15,7 @@ use rtw::moving_sphere::MovingSphere;
 use rtw::ray::Ray;
 use rtw::sphere::Sphere;
 use rtw::texture::*;
-use rtw::util::*;
 use rtw::vec3::*;
-use std::env;
-use std::f32::INFINITY;
-use std::iter;
-use std::sync::Arc;
-use std::time::SystemTime;
 
 fn write_color(color: &Color, samples_per_pixel: i32) {
     // Divide the color by the number of samples and gamma-correct for gamma=2.0
@@ -33,7 +33,7 @@ fn ray_color(ray: &Ray, background: &Color, world: &dyn Hittable, depth: i32) ->
         return Color::zero();
     }
 
-    if let Some(rec) = world.hit(ray, 0.001, INFINITY) {
+    if let Some(rec) = world.hit(ray, 0.001, FLOAT_INF) {
         let offset = if let Some((attenuation, scattered)) = rec.material.scatter(ray, &rec) {
             attenuation * ray_color(&scattered, background, world, depth - 1)
         } else {

@@ -1,6 +1,6 @@
-use crate::util::Point3;
-use crate::vec3::*;
 use rand::prelude::*;
+
+use crate::vec3::*;
 
 pub struct Perlin {
     vecs: Vec<Vec3>,

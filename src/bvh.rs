@@ -1,8 +1,8 @@
+use rand::prelude::*;
 
 use crate::aabb::AABB;
 use crate::hittable::{Hittable, SharedHittable, HitRecord};
 use crate::util::*;
-use rand::prelude::*;
 
 
 pub struct BvhNode {
