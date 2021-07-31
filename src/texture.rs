@@ -24,12 +24,12 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct Checker<Odd: Texture, Even: Texture> {
+pub struct Checker<Odd, Even> {
     odd: Odd,
     even: Even,
 }
 
-impl<Odd: Texture, Even: Texture> Checker<Odd, Even> {
+impl<Odd, Even> Checker<Odd, Even> {
     pub fn new(odd: Odd, even: Even) -> Self {
         Checker { odd, even }
     }

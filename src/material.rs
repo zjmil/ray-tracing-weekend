@@ -12,11 +12,11 @@ pub trait Material: Send + Sync {
     }
 }
 
-pub struct Lambertian<T: Texture> {
+pub struct Lambertian<T> {
     albedo: T,
 }
 
-impl<T: Texture> Lambertian<T> {
+impl<T> Lambertian<T> {
     pub fn new(albedo: T) -> Lambertian<T> {
         Lambertian { albedo }
     }
@@ -110,11 +110,11 @@ impl Material for Dielectric {
     }
 }
 
-pub struct DiffuseLight<T: Texture> {
+pub struct DiffuseLight<T> {
     emit: T,
 }
 
-impl<T: Texture> DiffuseLight<T> {
+impl<T> DiffuseLight<T> {
     pub fn new(emit: T) -> DiffuseLight<T> {
         DiffuseLight { emit }
     }
