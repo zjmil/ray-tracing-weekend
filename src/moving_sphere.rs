@@ -57,10 +57,10 @@ fn get_sphere_uv(p: &Point3) -> (Float, Float) {
 
 impl Hittable for MovingSphere {
     fn hit(&self, r: &Ray, t_min: Time, t_max: Time) -> Option<HitRecord> {
-        let oc = r.origin - self.center(r.time);
+        let oc = &r.origin - &self.center(r.time);
         let a = r.direction.mag_squared();
         let half_b = oc.dot(&r.direction);
-        let c = oc.mag_squared() - self.radius.powi(2);
+        let c = &oc.mag_squared() - self.radius.powi(2);
 
         let discriminant = half_b.powi(2) - a * c;
         if discriminant < 0.0 {
@@ -78,7 +78,7 @@ impl Hittable for MovingSphere {
         }
 
         let at = r.at(root);
-        let outward_normal = (at - self.center(r.time)) / self.radius;
+        let outward_normal = (&at - &self.center(r.time)) / self.radius;
         let (u, v) = get_sphere_uv(&outward_normal);
         Some(HitRecord::new(
             at,

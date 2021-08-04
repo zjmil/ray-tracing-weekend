@@ -27,24 +27,39 @@ fn write_color(color: &Color, samples_per_pixel: i32) {
     println!("{} {} {}", r, g, b);
 }
 
-fn ray_color(ray: &Ray, background: &Color, world: &dyn Hittable, depth: i32) -> Color {
-    // base case for ray bounce limit
-    if depth <= 0 {
-        return Color::zero();
-    }
+fn ray_color(ray: &Ray, background: &Color, world: &[Arc<dyn Hittable>], max_depth: i32) -> Color {
+    let mut ematts = Vec::new();
+    let mut prev_ray = *ray;
+    let mut depth = 0;
+    let mut color;
+    loop {
+        if depth >= max_depth {
+            color = Color::zero();
+            break;
+        }
 
-    if let Some(rec) = world.hit(ray, 0.001, FLOAT_INF) {
-        let offset = if let Some((attenuation, scattered)) = rec.material.scatter(ray, &rec) {
-            attenuation * ray_color(&scattered, background, world, depth - 1)
+        if let Some(rec) = world.hit(&prev_ray, 0.001, FLOAT_INF) {
+            let emitted = rec.material.emitted(rec.u, rec.v, &rec.p);
+            if let Some((attenuation, scattered)) = rec.material.scatter(&prev_ray, &rec) {
+                ematts.push((emitted, attenuation));
+                prev_ray = scattered;
+            } else {
+                color = emitted;
+                break;
+            }
         } else {
-            Color::zero()
-        };
+            color = *background;
+            break;
+        }
 
-        let emitted = rec.material.emitted(rec.u, rec.v, &rec.p);
-        emitted + offset
-    } else {
-        *background
+        depth += 1;
     }
+
+    while let Some((emitted, attenuation)) = ematts.pop() {
+        color = emitted + attenuation * color;
+    }
+
+    color
 }
 
 struct ProgramArgs {

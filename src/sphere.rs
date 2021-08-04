@@ -13,6 +13,7 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(center: Point3, radius: Float, material: Arc<dyn Material>) -> Sphere {
+        // A sphere is just a moving sphere that doesn't move
         Sphere {
             inner: MovingSphere::new(center, center, 0.0, 1.0, radius, material.clone()),
         }

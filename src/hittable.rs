@@ -44,18 +44,25 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
+    // TODO: change to range
     fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord>;
+
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB>;
 }
 
-impl Hittable for Vec<Arc<dyn Hittable>> {
-    fn hit(&self, r: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
-        self.iter()
-            .fold((t_max, None), |(closest_so_far, rec), obj| {
-                obj.hit(r, t_min, closest_so_far)
-                    .map_or((closest_so_far, rec), |obj_rec| (obj_rec.t, Some(obj_rec)))
-            })
-            .1
+impl Hittable for &[Arc<dyn Hittable>] {
+    fn hit(&self, ray: &Ray, t_min: Float, t_max: Float) -> Option<HitRecord> {
+        let mut closest_so_far = t_max;
+        let mut hit_record = None;
+
+        for obj in self.iter() {
+            if let Some(obj_rec) = obj.hit(ray, t_min, closest_so_far) {
+                closest_so_far = obj_rec.t;
+                hit_record = Some(obj_rec);
+            }
+        }
+
+        hit_record
     }
 
     fn bounding_box(&self, t0: Time, t1: Time) -> Option<AABB> {
